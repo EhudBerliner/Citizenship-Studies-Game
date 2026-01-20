@@ -2,13 +2,13 @@ let allData = [];
 let chapterQuestions = [];
 let currentIdx = 0;
 
-// פונקציה לניקוי טקסט מוחלט מכל תו נסתר
+// פונקציית ניקוי אגרסיבית לכל סוגי התווים הנסתרים
 function superClean(str) {
     if (!str) return "";
     return str.toString()
-        .replace(/[\u200B-\u200D\uFEFF]/g, "") // ניקוי תווי BOM ורווחים נסתרים
+        .replace(/[\u200B-\u200D\uFEFF]/g, "") 
         .trim()
-        .replace(/\s+/g, " "); // צמצום רווחים כפולים
+        .replace(/\s+/g, " ");
 }
 
 window.onload = () => {
@@ -24,8 +24,8 @@ window.onload = () => {
 };
 
 function initMenu() {
-    // מציאת עמודת הפרק - מחפש כותרת שמכילה את המילה "פרק"
-    const chapterKey = Object.keys(allData[0]).find(k => k.includes("פרק"));
+    const keys = Object.keys(allData[0]);
+    const chapterKey = keys.find(k => k.includes("פרק"));
     const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
     
     const container = document.getElementById('chapter-list');
@@ -51,14 +51,13 @@ function startQuiz(chapterName, chapterKey) {
 
 function showQuestion() {
     const q = chapterQuestions[currentIdx];
-    document.getElementById('progress').innerText = `שאלה ${currentIdx + 1} מתוך ${chapterQuestions.length}`;
+    document.getElementById('progress').innerText = `שאלה ${currentIdx + 1}/${chapterQuestions.length}`;
     document.getElementById('question-text').innerText = q["שאלה"];
     document.getElementById('feedback-container').classList.add('hidden');
     
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = '';
     
-    // שליפת תשובות וניקוין
     const choices = q["תשובות"].split('/').map(c => superClean(c));
     
     choices.forEach(choice => {
@@ -76,34 +75,32 @@ function handleAnswer(selected, q) {
     const msg = document.getElementById('feedback-message');
     const exp = document.getElementById('explanation-text');
     
-    // מציאת עמודות באופן דינמי לפי מילות מפתח
+    // איתור עמודות חכם
     const keys = Object.keys(q);
-    const correctKey = keys.find(k => k.includes("תשובה נכונה"));
+    const correctKey = keys.find(k => k.includes("נכונה"));
     const conceptKey = keys.find(k => k.includes("שם המושג"));
     const infoKey = keys.find(k => k.includes("הסבר"));
 
     const correctVal = superClean(q[correctKey]);
     const selectedClean = superClean(selected);
-    const conceptName = q[conceptKey] || "מושג כללי";
-    const explanation = q[infoKey] || "אין הסבר זמין";
+    const conceptName = q[conceptKey] || "לא נמצא מושג";
+    const explanation = q[infoKey] || "אין הסבר";
 
     feedback.classList.remove('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
 
-    // השוואה לוגית
-    if (selectedClean === correctVal && correctVal !== "") {
-        msg.innerHTML = `<h3 style="color: #2ecc71">נכון מאוד! ✨</h3>`;
+    if (selectedClean === correctVal) {
+        msg.innerHTML = `<h3 style="color: #2ecc71">נכון מאוד! ✅</h3>`;
         feedback.className = "success-style";
     } else {
-        msg.innerHTML = `<h3 style="color: #e74c3c">טעות... 💡</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
+        msg.innerHTML = `<h3 style="color: #e74c3c">טעות... ❌</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
         feedback.className = "error-style";
     }
     
-    // הצגת המושג והסבר (כאן התיקון לשם המושג)
     exp.innerHTML = `
         <div style="margin-top:15px; text-align:right; border-top: 2px solid #ddd; padding-top:10px;">
-            <p style="font-size: 1.1rem;"><b>שם המושג:</b> <span style="color:#3498db">${conceptName}</span></p>
-            <p><b>הסבר מהחומר:</b> ${explanation}</p>
+            <p style="font-size: 1.1rem; margin-bottom: 5px;"><b>מושג הלימוד:</b> <span style="color:#3498db; font-weight:bold;">${conceptName}</span></p>
+            <p><b>הסבר:</b> ${explanation}</p>
         </div>
     `;
     
@@ -115,7 +112,7 @@ document.getElementById('next-btn').onclick = () => {
     if (currentIdx < chapterQuestions.length) {
         showQuestion();
     } else {
-        alert("סיימת את הפרק!");
+        alert("הפרק הושלם!");
         location.reload();
     }
 };
