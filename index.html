@@ -3,35 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>סימולטור אזרחות - V1.0.9</title>
-    <link rel="stylesheet" href="style.css">
+    <title>שומר הדמוקרטיה - V1.1.1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            direction: rtl;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 { color: var(--primary); margin-bottom: 10px; }
+
+        .card {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        #stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        #options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            padding: 15px;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            background: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+        }
+
+        button:hover:not(:disabled) { background: #ebf5ff; }
+        button:active { transform: scale(0.98); }
+
+        .back-btn {
+            background: #eee;
+            border: 1px solid #ccc;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+        }
+
+        .success-style { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 10px; color: #155724; }
+        .error-style { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 10px; color: #721c24; }
+
+        .hidden { display: none !important; }
+
+        #question-text { font-size: 1.25rem; font-weight: bold; margin-bottom: 20px; line-height: 1.4; }
+        #next-btn { width: 100%; margin-top: 15px; background: var(--primary); color: white; border: none; }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>🏛️ שומר הדמוקרטיה <small style="font-size:0.4em">V1.0.9</small></h1>
-            <div id="stats" class="hidden">
-                <span id="chapter-name"></span> | <span id="progress"></span>
+
+<div id="app">
+    <header>
+        <h1>🏛️ שומר הדמוקרטיה <small style="font-size:0.4em; opacity:0.6">V1.1.1</small></h1>
+        <div id="stats" class="hidden">
+            <button class="back-btn" onclick="initMenu()">🏠 חזרה</button>
+            <div>
+                <span id="chapter-name" style="font-weight: bold;"></span> | 
+                <span id="progress"></span>
             </div>
-        </header>
-        <main>
-            <section id="menu-screen">
-                <div id="chapter-list"></div>
-            </section>
-            <section id="quiz-screen" class="hidden">
-                <div class="card">
-                    <div id="question-text"></div>
-                    <div id="options-container"></div>
-                </div>
-                <div id="feedback-container" class="hidden">
-                    <div id="feedback-message"></div>
-                    <div id="explanation-text"></div>
-                    <button id="next-btn">המשך למושג הבא ➔</button>
-                </div>
-            </section>
-        </main>
-    </div>
-    <script src="script.js"></script>
+        </div>
+    </header>
+
+    <main>
+        <section id="menu-screen">
+            <div class="card">
+                <h2 style="margin-top:0; text-align:center;">בחר פרק לתרגול:</h2>
+                <div id="chapter-list" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            </div>
+        </section>
+
+        <section id="quiz-screen" class="hidden">
+            <div class="card">
+                <div id="question-text"></div>
+                <div id="options-container"></div>
+            </div>
+            
+            <div id="feedback-container" class="hidden">
+                <div id="feedback-message"></div>
+                <div id="explanation-text" style="margin-top:10px; font-size:0.95rem; border-top:1px solid #ccc; padding-top:10px;"></div>
+                <button id="next-btn">המשך למושג הבא ➔</button>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    let allData = [];
+    let chapterQuestions = [];
+    let currentIdx = 0;
+
+    // ניקוי טקסט אגרסיבי
+    function superClean(str) {
+        if (!str) return "";
+        return str.toString().replace(/[\u200B-\u200D\uFEFF]/g, "").trim().replace(/\s+/g, " ");
+    }
+
+    // טעינת הנתונים
+    window.onload = () => {
+        Papa.parse("Citizenship-Studies-Game.csv", {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                allData = results.data.map(row => {
+                    let cleanRow = {};
+                    for (let key in row) {
+                        cleanRow[superClean(key)] = superClean(row[key]);
+                    }
+                    return cleanRow;
+                });
+                initMenu();
+            }
+        });
+    };
+
+    // בניית תפריט הפרקים
+    function initMenu() {
+        const keys = Object.keys(allData[0]);
+        const chapterKey = keys.find(k => k.includes("פרק"));
+        const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
+        
+        document.getElementById('menu-screen').classList.remove('hidden');
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('stats').classList.add('hidden');
+
+        const container = document.getElementById('chapter-list');
+        container.innerHTML = '';
+        chapters.forEach(name => {
+            const btn = document.createElement('button');
+            btn.innerText = `📖 ${name}`;
+            btn.onclick = () => startQuiz(name, chapterKey);
+            container.appendChild(btn);
+        });
+    }
+
+    // התחלת פרק עם הגרלה: שאלה אחת למושג + ערבוב מושגים
+    function startQuiz(chapterName, chapterKey) {
+        const keys = Object.keys(allData[0]);
+        const conceptKey = keys.find(k => k.includes("מושג"));
+        
+        // 1. סינון לפרק
+        const filtered = allData.filter(q => q[chapterKey] === chapterName);
+        
+        // 2. קיבוץ לפי מושג
+        const grouped = {};
+        filtered.forEach(q => {
+            const cName = q[conceptKey] || "כללי";
+            if (!grouped[cName]) grouped[cName] = [];
+            grouped[cName].push(q);
+        });
+
+        // 3. בחירת שאלה אחת אקראית מכל קבוצת מושג
+        chapterQuestions = Object.values(grouped).map(questions => {
+            return questions[Math.floor(Math.random() * questions.length)];
+        });
+
+        // 4. ערבוב סדר המושגים בתוך הפרק
+        chapterQuestions.sort(() => Math.random() - 0.5);
+
+        currentIdx = 0;
+        document.getElementById('menu-screen').classList.add('hidden');
+        document.getElementById('quiz-screen').classList.remove('hidden');
+        document.getElementById('stats').classList.remove('hidden');
+        document.getElementById('chapter-name').innerText = chapterName;
+        showQuestion();
+    }
+
+    // הצגת השאלה וערבוב תשובות
+    function showQuestion() {
+        const q = chapterQuestions[currentIdx];
+        document.getElementById('progress').innerText = `מושג ${currentIdx + 1}/${chapterQuestions.length}`;
+        document.getElementById('question-text').innerText = q["שאלה"];
+        document.getElementById('feedback-container').classList.add('hidden');
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = '';
+        
+        const choices = q["תשובות"].split('/').map(c => superClean(c)).sort(() => Math.random() - 0.5);
+        
+        choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.innerText = choice;
+            btn.onclick = () => handleAnswer(choice, q);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    // בדיקת תשובה והצגת הסבר
+    function handleAnswer(selected, q) {
+        const feedback = document.getElementById('feedback-container');
+        const msg = document.getElementById('feedback-message');
+        const exp = document.getElementById('explanation-text');
+        
+        const keys = Object.keys(q);
+        const correctVal = q[keys.find(k => k.includes("נכונה"))];
+        const conceptName = q[keys.find(k => k.includes("מושג"))];
+        const info = q[keys.find(k => k.includes("הסבר"))];
+
+        feedback.classList.remove('hidden');
+        document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
+
+        if (superClean(selected) === correctVal) {
+            msg.innerHTML = `<h3 style="margin:0">נכון מאוד! ✅</h3>`;
+            feedback.className = "success-style";
+        } else {
+            msg.innerHTML = `<h3 style="margin:0">טעות ❌</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
+            feedback.className = "error-style";
+        }
+        
+        exp.innerHTML = `<b>מושג: ${conceptName}</b><br>${info}`;
+    }
+
+    document.getElementById('next-btn').onclick = () => {
+        currentIdx++;
+        if (currentIdx < chapterQuestions.length) {
+            showQuestion();
+        } else {
+            alert("השלמת את כל המושגים בפרק זה!");
+            initMenu();
+        }
+    };
+</script>
+
 </body>
 </html>
