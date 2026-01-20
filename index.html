@@ -3,31 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>משחק אזרחות אינטראקטיבי</title>
+    <title>סימולטור אזרחות - שומר הדמוקרטיה</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="game-container">
+    <div id="app">
         <header>
             <h1>🏛️ שומר הדמוקרטיה</h1>
-            <div id="stats">
-                <span>פרק: <span id="current-chapter">-</span></span>
-                <span>שאלה: <span id="q-count">0</span></span>
+            <div id="stats" class="hidden">
+                <span id="chapter-name"></span>
+                <span id="progress"></span>
             </div>
         </header>
 
-        <div id="menu-screen">
-            <h2>בחר פרק לתרגול:</h2>
-            <div id="chapter-buttons"></div>
-        </div>
+        <main>
+            <section id="menu-screen">
+                <h2>בחר פרק לתרגול מהקובץ:</h2>
+                <div id="chapter-list"></div>
+            </section>
 
-        <div id="quiz-screen" class="hidden">
-            <div id="question-text"></div>
-            <div id="options-container"></div>
-            <div id="feedback" class="hidden"></div>
-            <button id="next-btn" class="hidden">לשאלה הבאה ➔</button>
-        </div>
+            <section id="quiz-screen" class="hidden">
+                <div class="card">
+                    <div id="question-text"></div>
+                    <div id="options-container"></div>
+                </div>
+                
+                <div id="feedback-container" class="hidden">
+                    <div id="feedback-message"></div>
+                    <div id="explanation-text"></div>
+                    <button id="next-btn">לשאלה הבאה ➔</button>
+                </div>
+            </section>
+        </main>
     </div>
     <script src="script.js"></script>
 </body>
