@@ -2,32 +2,43 @@ let allData = [];
 let chapterQuestions = [];
 let currentIdx = 0;
 
-// טעינת הנתונים מה-CSV
 window.onload = () => {
     Papa.parse("Citizenship-Studies-Game.csv", {
         download: true,
         header: true,
+        skipEmptyLines: true,
         complete: function(results) {
-            allData = results.data.filter(row => row.שאלה); // סינון שורות ריקות
+            // ניקוי רווחים משמות העמודות ומהנתונים עצמם
+            allData = results.data.map(row => {
+                let cleanRow = {};
+                for (let key in row) {
+                    cleanRow[key.trim()] = row[key] ? row[key].trim() : "";
+                }
+                return cleanRow;
+            });
             initMenu();
         }
     });
 };
 
 function initMenu() {
-    const chapters = [...new Set(allData.map(q => q.שם_הפרק))];
+    // זיהוי שם העמודה של הפרק (מטפל בשינויי נוסח)
+    const chapterKey = Object.keys(allData[0]).find(k => k.includes("פרק"));
+    const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
+    
     const container = document.getElementById('chapter-list');
+    container.innerHTML = '';
     
     chapters.forEach(name => {
         const btn = document.createElement('button');
         btn.innerText = `📖 ${name}`;
-        btn.onclick = () => startQuiz(name);
+        btn.onclick = () => startQuiz(name, chapterKey);
         container.appendChild(btn);
     });
 }
 
-function startQuiz(chapterName) {
-    chapterQuestions = allData.filter(q => q.שם_הפרק === chapterName);
+function startQuiz(chapterName, chapterKey) {
+    chapterQuestions = allData.filter(q => q[chapterKey] === chapterName);
     currentIdx = 0;
     
     document.getElementById('menu-screen').classList.add('hidden');
@@ -41,14 +52,15 @@ function startQuiz(chapterName) {
 function showQuestion() {
     const q = chapterQuestions[currentIdx];
     document.getElementById('progress').innerText = `שאלה ${currentIdx + 1} מתוך ${chapterQuestions.length}`;
-    document.getElementById('question-text').innerText = q.שאלה;
+    document.getElementById('question-text').innerText = q["שאלה"];
     document.getElementById('feedback-container').classList.add('hidden');
     
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = '';
     
-    // חיתוך התשובות לפי התו /
-    const choices = q.תשובות.split('/').map(c => c.trim());
+    // מציאת עמודת התשובות והתשובה הנכונה
+    const choicesStr = q["תשובות"] || "";
+    const choices = choicesStr.split('/').map(c => c.trim());
     
     choices.forEach(choice => {
         const btn = document.createElement('button');
@@ -56,6 +68,8 @@ function showQuestion() {
         btn.onclick = () => handleAnswer(choice, q);
         optionsContainer.appendChild(btn);
     });
+    
+    document.getElementById('next-btn').classList.add('hidden');
 }
 
 function handleAnswer(selected, q) {
@@ -64,19 +78,30 @@ function handleAnswer(selected, q) {
     const exp = document.getElementById('explanation-text');
     
     feedback.classList.remove('hidden');
-    
-    // נטרול לחיצות נוספות
-    document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
+    document.getElementById('next-btn').classList.remove('hidden');
 
-    if (selected === q.תשובה_נכונה) {
-        msg.innerHTML = "<h3>מעולה! תשובה נכונה ✨</h3>";
+    // איתור דינמי של העמודות כדי למנוע undefined
+    const correctAns = q["תשובה נכונה"] || q["תשובה_נכונה"];
+    const conceptName = q["שם המושג בקובץ הלימוד"] || q["שם המושג"] || "מושג כללי";
+    const explanation = q["הסבר המושג (לפי חומר הלימוד)"] || q["הסבר המושג"] || "";
+
+    // ניקוי רווחים להשוואה מדויקת
+    if (selected.trim() === correctAns.trim()) {
+        msg.innerHTML = `<h3 style="color: #155724">מעולה! תשובה נכונה ✨</h3>`;
         feedback.className = "success-style";
     } else {
-        msg.innerHTML = `<h3>טעות... 💡</h3><p>התשובה הנכונה היא: <b>${q.תשובה_נכונה}</b></p>`;
+        msg.innerHTML = `<h3 style="color: #721c24">לא מדויק... 💡</h3><p>התשובה הנכונה היא: <b>${correctAns}</b></p>`;
         feedback.className = "error-style";
     }
     
-    exp.innerHTML = `<hr><p><b>הסבר המושג:</b> ${q['הסבר המושג (לפי חומר הלימוד)']}</p>`;
+    exp.innerHTML = `
+        <div style="margin-top:15px; text-align:right; border-top: 1px solid #ccc; padding-top:10px;">
+            <p><b>שם המושג:</b> ${conceptName}</p>
+            <p><b>הסבר:</b> ${explanation}</p>
+        </div>
+    `;
+    
+    document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
 }
 
 document.getElementById('next-btn').onclick = () => {
@@ -85,6 +110,6 @@ document.getElementById('next-btn').onclick = () => {
         showQuestion();
     } else {
         alert("כל הכבוד! סיימת את הפרק.");
-        location.reload(); // חזרה לתפריט
+        location.reload();
     }
 };
