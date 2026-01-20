@@ -1,127 +1,92 @@
-let allData = [];
-let chapterQuestions = [];
-let currentIdx = 0;
-
-function superClean(str) {
-    if (!str) return "";
-    return str.toString().replace(/[\u200B-\u200D\uFEFF]/g, "").trim().replace(/\s+/g, " ");
+/* הגדרות כלליות */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f5f7fa;
+    margin: 0;
+    padding: 20px;
+    direction: rtl; /* תמיכה בעברית */
 }
 
-window.onload = () => {
-    Papa.parse("Citizenship-Studies-Game.csv", {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-            allData = results.data.map(row => {
-                let cleanRow = {};
-                for (let key in row) {
-                    cleanRow[superClean(key)] = superClean(row[key]);
-                }
-                return cleanRow;
-            });
-            initMenu();
-        }
-    });
-};
-
-function initMenu() {
-    const keys = Object.keys(allData[0]);
-    const chapterKey = keys.find(k => k.includes("פרק")) || "שם הפרק";
-    const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
-    
-    const container = document.getElementById('chapter-list');
-    container.innerHTML = '';
-    chapters.forEach(name => {
-        const btn = document.createElement('button');
-        btn.innerText = `📖 ${name}`;
-        btn.onclick = () => startQuiz(name, chapterKey);
-        container.appendChild(btn);
-    });
+.container {
+    max-width: 850px;
+    margin: 0 auto;
 }
 
-function startQuiz(chapterName, chapterKey) {
-    const conceptKey = Object.keys(allData[0]).find(k => k.includes("מושג")) || "שם המושג בקובץ הלימוד";
-    
-    // 1. סינון שאלות לפרק הנבחר
-    const filtered = allData.filter(q => q[chapterKey] === chapterName);
-    
-    // 2. קיבוץ שאלות לפי מושג
-    const groupedByConcept = {};
-    filtered.forEach(q => {
-        const concept = q[conceptKey];
-        if (!groupedByConcept[concept]) groupedByConcept[concept] = [];
-        groupedByConcept[concept].push(q);
-    });
-
-    // 3. הגרלת שאלה אחת מכל מושג
-    chapterQuestions = Object.values(groupedByConcept).map(questions => {
-        return questions[Math.floor(Math.random() * questions.length)];
-    });
-
-    // 4. ערבוב סדר המושגים בפרק
-    chapterQuestions.sort(() => Math.random() - 0.5);
-
-    currentIdx = 0;
-    document.getElementById('menu-screen').classList.add('hidden');
-    document.getElementById('quiz-screen').classList.remove('hidden');
-    document.getElementById('stats').classList.remove('hidden');
-    document.getElementById('chapter-name').innerText = chapterName;
-    showQuestion();
+/* --- תפריט כפתורי הפרקים --- */
+.chapters-nav {
+    display: flex;
+    flex-direction: column; /* הצבה אחת מתחת לשנייה */
+    gap: 12px;
+    margin-bottom: 40px;
 }
 
-function showQuestion() {
-    const q = chapterQuestions[currentIdx];
-    document.getElementById('progress').innerText = `מושג ${currentIdx + 1}/${chapterQuestions.length}`;
-    document.getElementById('question-text').innerText = q["שאלה"];
-    document.getElementById('feedback-container').classList.add('hidden');
+.chapter-btn {
+    background-color: #ffffff;
+    border: 2px solid #e1e4e8;
+    color: #2d3436;
+    padding: 18px 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: all 0.25s ease;
     
-    const optionsContainer = document.getElementById('options-container');
-    optionsContainer.innerHTML = '';
+    /* יישור טקסט לימין */
+    text-align: right;
+    width: 100%;
     
-    const choices = q["תשובות"].split('/').map(c => superClean(c)).sort(() => Math.random() - 0.5);
-    
-    choices.forEach(choice => {
-        const btn = document.createElement('button');
-        btn.innerText = choice;
-        btn.onclick = () => handleAnswer(choice, q);
-        optionsContainer.appendChild(btn);
-    });
-    document.getElementById('next-btn').classList.add('hidden');
+    /* הוספת אייקון חץ קטן בצד (אופציונלי) */
+    display: flex;
+    justify-content: bween;
+    align-items: center;
 }
 
-function handleAnswer(selected, q) {
-    const feedback = document.getElementById('feedback-container');
-    const msg = document.getElementById('feedback-message');
-    const exp = document.getElementById('explanation-text');
-    
-    const keys = Object.keys(q);
-    const correctVal = q[keys.find(k => k.includes("נכונה"))];
-    const conceptName = q[keys.find(k => k.includes("מושג"))] || "מושג כללי";
-    const explanation = q[keys.find(k => k.includes("הסבר"))] || "";
+.chapter-btn:hover {
+    border-color: #007bff;
+    background-color: #f0f7ff;
+    color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+}
 
-    feedback.classList.remove('hidden');
-    document.getElementById('next-btn').classList.remove('hidden');
-    document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
+.chapter-btn:active {
+    transform: translateY(0);
+}
 
-    if (superClean(selected) === correctVal) {
-        msg.innerHTML = `<h3 style="color: #2ecc71; margin:0;">נכון מאוד! ✅</h3>`;
-        feedback.className = "success-style";
-    } else {
-        msg.innerHTML = `<h3 style="color: #e74c3c; margin:0;">טעות ❌</h3><p>התשובה: <b>${correctVal}</b></p>`;
-        feedback.className = "error-style";
+/* --- אזור התשובות (אחת מתחת לשנייה) --- */
+.answers-container {
+    display: flex;
+    flex-direction: column; /* תשובות בטור */
+    gap: 30px;
+}
+
+.answer-card {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-right: 8px solid #007bff; /* פס דקורטיבי ימני */
+}
+
+.answer-card h2 {
+    margin-top: 0;
+    color: #2d3436;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #f1f1f1;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.answer-content {
+    color: #636e72;
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+/* התאמה לניידים */
+@media (max-width: 600px) {
+    .chapter-btn {
+        padding: 15px;
+        font-size: 1rem;
     }
-    
-    exp.innerHTML = `<div style="margin-top:10px; font-size:0.95rem; border-top:1px solid #ccc; padding-top:10px;">
-        <b>מושג: ${conceptName}</b><br>${explanation}</div>`;
 }
-
-document.getElementById('next-btn').onclick = () => {
-    currentIdx++;
-    if (currentIdx < chapterQuestions.length) {
-        showQuestion();
-    } else {
-        alert("סיימת את כל המושגים בפרק!");
-        location.reload();
-    }
-};
