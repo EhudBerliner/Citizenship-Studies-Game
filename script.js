@@ -2,13 +2,12 @@ let allData = [];
 let chapterQuestions = [];
 let currentIdx = 0;
 
-// פונקציית ניקוי אגרסיבית לכל סוגי התווים הנסתרים והרווחים
 function superClean(str) {
     if (!str) return "";
     return str.toString()
-        .replace(/[\u200B-\u200D\uFEFF]/g, "") // מנקה תווים בלתי נראים (BOM)
+        .replace(/[\u200B-\u200D\uFEFF]/g, "") 
         .trim()
-        .replace(/\s+/g, " "); // הופך רווחים כפולים לרווח יחיד
+        .replace(/\s+/g, " ");
 }
 
 window.onload = () => {
@@ -17,7 +16,6 @@ window.onload = () => {
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            // ניקוי יסודי של המפתחות (הכותרות) והערכים כבר בשלב הטעינה
             allData = results.data.map(row => {
                 let cleanRow = {};
                 for (let key in row) {
@@ -31,16 +29,12 @@ window.onload = () => {
 };
 
 function initMenu() {
-    // מציאת עמודת הפרק באופן דינמי
     const keys = Object.keys(allData[0]);
-    const chapterKey = keys.find(k => k.includes("פרק")) || "שם הפרק";
-    
-    // יצירת רשימת פרקים ייחודית
+    const chapterKey = keys.find(k => k.includes("פרק"));
     const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
     
     const container = document.getElementById('chapter-list');
     container.innerHTML = '';
-    
     chapters.forEach(name => {
         const btn = document.createElement('button');
         btn.innerText = `📖 ${name}`;
@@ -50,28 +44,51 @@ function initMenu() {
 }
 
 function startQuiz(chapterName, chapterKey) {
-    chapterQuestions = allData.filter(q => q[chapterKey] === chapterName);
-    currentIdx = 0;
+    const keys = Object.keys(allData[0]);
+    const conceptKey = keys.find(k => k.includes("מושג"));
     
+    // 1. סינון שאלות השייכות לפרק הנבחר
+    const filteredByChapter = allData.filter(q => q[chapterKey] === chapterName);
+    
+    // 2. קיבוץ שאלות לפי שם המושג
+    const groupedByConcept = {};
+    filteredByChapter.forEach(q => {
+        const cName = q[conceptKey] || "ללא מושג";
+        if (!groupedByConcept[cName]) {
+            groupedByConcept[cName] = [];
+        }
+        groupedByConcept[cName].push(q);
+    });
+
+    // 3. בחירת שאלה אחת אקראית מכל מושג
+    chapterQuestions = Object.keys(groupedByConcept).map(conceptName => {
+        const questionsForThisConcept = groupedByConcept[conceptName];
+        const randomIndex = Math.floor(Math.random() * questionsForThisConcept.length);
+        return questionsForThisConcept[randomIndex];
+    });
+
+    // 4. ערבוב סדר המושגים בפרק (כדי שלא יופיעו תמיד באותו סדר)
+    chapterQuestions.sort(() => Math.random() - 0.5);
+
+    currentIdx = 0;
     document.getElementById('menu-screen').classList.add('hidden');
     document.getElementById('quiz-screen').classList.remove('hidden');
     document.getElementById('stats').classList.remove('hidden');
     document.getElementById('chapter-name').innerText = chapterName;
-    
     showQuestion();
 }
 
 function showQuestion() {
     const q = chapterQuestions[currentIdx];
-    document.getElementById('progress').innerText = `שאלה ${currentIdx + 1}/${chapterQuestions.length}`;
+    document.getElementById('progress').innerText = `מושג ${currentIdx + 1} מתוך ${chapterQuestions.length}`;
     document.getElementById('question-text').innerText = q["שאלה"];
     document.getElementById('feedback-container').classList.add('hidden');
     
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = '';
     
-    // פיצול תשובות (תומך בשימוש בלוכסן)
-    const choices = q["תשובות"].split('/').map(c => superClean(c));
+    // ערבוב סדר התשובות בתוך השאלה
+    const choices = q["תשובות"].split('/').map(c => superClean(c)).sort(() => Math.random() - 0.5);
     
     choices.forEach(choice => {
         const btn = document.createElement('button');
@@ -79,7 +96,6 @@ function showQuestion() {
         btn.onclick = () => handleAnswer(choice, q);
         optionsContainer.appendChild(btn);
     });
-    
     document.getElementById('next-btn').classList.add('hidden');
 }
 
@@ -88,33 +104,26 @@ function handleAnswer(selected, q) {
     const msg = document.getElementById('feedback-message');
     const exp = document.getElementById('explanation-text');
     
-    // איתור עמודות חכם
     const keys = Object.keys(q);
-    const correctKey = keys.find(k => k.includes("נכונה"));
-    const conceptKey = keys.find(k => k.includes("מושג"));
-    const infoKey = keys.find(k => k.includes("הסבר"));
-
-    const correctVal = q[correctKey];
-    const selectedClean = superClean(selected);
-    const conceptName = q[conceptKey] || "מושג כללי";
-    const explanation = q[infoKey] || "אין הסבר זמין";
+    const correctVal = q[keys.find(k => k.includes("נכונה"))];
+    const conceptName = q[keys.find(k => k.includes("מושג"))];
+    const explanation = q[keys.find(k => k.includes("הסבר"))];
 
     feedback.classList.remove('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
     document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
 
-    if (selectedClean === correctVal) {
-        msg.innerHTML = `<h3 style="color: #2ecc71">נכון מאוד! ✅</h3>`;
+    if (superClean(selected) === correctVal) {
+        msg.innerHTML = `<h3 style="color: #2ecc71; margin:0;">נכון מאוד! ✨</h3>`;
         feedback.className = "success-style";
     } else {
-        msg.innerHTML = `<h3 style="color: #e74c3c">טעות... ❌</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
+        msg.innerHTML = `<h3 style="color: #e74c3c; margin:0;">טעות... 💡</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
         feedback.className = "error-style";
     }
     
-    // הצגת המושג והסבר בביאור - התיקון הסופי להצגת שם המושג
     exp.innerHTML = `
-        <div style="margin-top:15px; text-align:right; border-top: 2px solid #ddd; padding-top:10px;">
-            <p style="font-size: 1.1rem; margin-bottom: 5px;"><b>מושג הלימוד:</b> <span style="color:#3498db; font-weight:bold;">${conceptName}</span></p>
+        <div style="margin-top:10px; border-top:1px solid #ccc; padding-top:10px;">
+            <p><b>מושג:</b> ${conceptName}</p>
             <p><b>הסבר:</b> ${explanation}</p>
         </div>
     `;
@@ -125,7 +134,7 @@ document.getElementById('next-btn').onclick = () => {
     if (currentIdx < chapterQuestions.length) {
         showQuestion();
     } else {
-        alert("הפרק הושלם בהצלחה!");
+        alert("סיימת את כל המושגים בפרק זה!");
         location.reload();
     }
 };
