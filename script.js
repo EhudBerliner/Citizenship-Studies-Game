@@ -33,6 +33,10 @@ function initMenu() {
     const chapterKey = keys.find(k => k.includes("פרק"));
     const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
     
+    document.getElementById('menu-screen').classList.remove('hidden');
+    document.getElementById('quiz-screen').classList.add('hidden');
+    document.getElementById('stats').classList.add('hidden');
+
     const container = document.getElementById('chapter-list');
     container.innerHTML = '';
     chapters.forEach(name => {
@@ -47,27 +51,23 @@ function startQuiz(chapterName, chapterKey) {
     const keys = Object.keys(allData[0]);
     const conceptKey = keys.find(k => k.includes("מושג"));
     
-    // 1. סינון שאלות השייכות לפרק הנבחר
-    const filteredByChapter = allData.filter(q => q[chapterKey] === chapterName);
+    // 1. סינון שאלות הפרק
+    const filtered = allData.filter(q => q[chapterKey] === chapterName);
     
-    // 2. קיבוץ שאלות לפי שם המושג
+    // 2. קיבוץ שאלות לפי מושג (כדי להבטיח שאלה אחת למושג)
     const groupedByConcept = {};
-    filteredByChapter.forEach(q => {
-        const cName = q[conceptKey] || "ללא מושג";
-        if (!groupedByConcept[cName]) {
-            groupedByConcept[cName] = [];
-        }
+    filtered.forEach(q => {
+        const cName = q[conceptKey] || "כללי";
+        if (!groupedByConcept[cName]) groupedByConcept[cName] = [];
         groupedByConcept[cName].push(q);
     });
 
-    // 3. בחירת שאלה אחת אקראית מכל מושג
-    chapterQuestions = Object.keys(groupedByConcept).map(conceptName => {
-        const questionsForThisConcept = groupedByConcept[conceptName];
-        const randomIndex = Math.floor(Math.random() * questionsForThisConcept.length);
-        return questionsForThisConcept[randomIndex];
+    // 3. הגרלת שאלה אחת מכל מושג
+    chapterQuestions = Object.values(groupedByConcept).map(questions => {
+        return questions[Math.floor(Math.random() * questions.length)];
     });
 
-    // 4. ערבוב סדר המושגים בפרק (כדי שלא יופיעו תמיד באותו סדר)
+    // 4. ערבוב סדר המושגים
     chapterQuestions.sort(() => Math.random() - 0.5);
 
     currentIdx = 0;
@@ -80,14 +80,14 @@ function startQuiz(chapterName, chapterKey) {
 
 function showQuestion() {
     const q = chapterQuestions[currentIdx];
-    document.getElementById('progress').innerText = `מושג ${currentIdx + 1} מתוך ${chapterQuestions.length}`;
+    document.getElementById('progress').innerText = `מושג ${currentIdx + 1}/${chapterQuestions.length}`;
     document.getElementById('question-text').innerText = q["שאלה"];
     document.getElementById('feedback-container').classList.add('hidden');
     
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = '';
     
-    // ערבוב סדר התשובות בתוך השאלה
+    // ערבוב תשובות בתוך השאלה
     const choices = q["תשובות"].split('/').map(c => superClean(c)).sort(() => Math.random() - 0.5);
     
     choices.forEach(choice => {
@@ -114,19 +114,15 @@ function handleAnswer(selected, q) {
     document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
 
     if (superClean(selected) === correctVal) {
-        msg.innerHTML = `<h3 style="color: #2ecc71; margin:0;">נכון מאוד! ✨</h3>`;
+        msg.innerHTML = `<h3 style="color: #2ecc71; margin:0;">נכון מאוד! ✅</h3>`;
         feedback.className = "success-style";
     } else {
-        msg.innerHTML = `<h3 style="color: #e74c3c; margin:0;">טעות... 💡</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
+        msg.innerHTML = `<h3 style="color: #e74c3c; margin:0;">טעות ❌</h3><p>התשובה: <b>${correctVal}</b></p>`;
         feedback.className = "error-style";
     }
     
-    exp.innerHTML = `
-        <div style="margin-top:10px; border-top:1px solid #ccc; padding-top:10px;">
-            <p><b>מושג:</b> ${conceptName}</p>
-            <p><b>הסבר:</b> ${explanation}</p>
-        </div>
-    `;
+    exp.innerHTML = `<div style="margin-top:10px; border-top:1px solid #ccc; padding-top:10px;">
+        <b>מושג: ${conceptName}</b><br>${explanation}</div>`;
 }
 
 document.getElementById('next-btn').onclick = () => {
@@ -134,7 +130,14 @@ document.getElementById('next-btn').onclick = () => {
     if (currentIdx < chapterQuestions.length) {
         showQuestion();
     } else {
-        alert("סיימת את כל המושגים בפרק זה!");
-        location.reload();
+        alert("סיימת את הפרק!");
+        initMenu();
     }
 };
+
+// כפתור חזרה לתפריט
+function backToMenu() {
+    if (confirm("האם בטוח שברצונך לחזור לתפריט? ההתקדמות בפרק זה תאבד.")) {
+        initMenu();
+    }
+}
