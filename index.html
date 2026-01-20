@@ -3,173 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>סימולטור: שומר הדמוקרטיה - גרסה מורחבת</title>
+    <title>אזרחות: בחירת פרקים</title>
     <style>
-        :root { --primary: #2c3e50; --blue: #3498db; --green: #2ecc71; --red: #e74c3c; --bg: #f4f7f6; }
+        :root { --primary: #2c3e50; --blue: #3498db; --green: #2ecc71; --red: #e74c3c; --bg: #f0f2f5; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        #game-box { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 20px; position: relative; }
+        #game-box { width: 100%; max-width: 500px; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 20px; }
         
-        .status-bar { display: flex; justify-content: space-between; margin-bottom: 15px; background: #f8f9fa; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 0.9rem; }
-        
-        .scenario-container { min-height: 120px; margin: 15px 0; padding: 15px; background: #fff8e1; border-right: 5px solid #ffc107; border-radius: 8px; font-size: 1.1rem; line-height: 1.5; }
+        .menu-btn { width: 100%; padding: 20px; margin: 10px 0; border: none; border-radius: 15px; background: white; border: 2px solid var(--blue); color: var(--primary); font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.2s; text-align: right; display: flex; justify-content: space-between; align-items: center; }
+        .menu-btn:active { background: #eef7ff; transform: scale(0.98); }
+        .menu-btn span { font-size: 0.8rem; color: #666; font-weight: normal; }
+
+        .scenario-container { min-height: 120px; margin: 15px 0; padding: 15px; background: #fff; border: 2px solid #ddd; border-radius: 12px; font-size: 1.1rem; line-height: 1.5; text-align: center; }
         
         .options-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        button { padding: 16px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 0 #1a252f; }
-        button:active { transform: translateY(2px); box-shadow: none; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        #feedback-overlay { 
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.98); z-index: 100; flex-direction: column; 
-            align-items: center; justify-content: center; padding: 25px; text-align: center; border-radius: 20px;
-        }
-        .feedback-text { font-size: 1.15rem; margin-bottom: 20px; color: #333; }
-        .continue-btn { background: var(--green); box-shadow: 0 4px 0 #27ae60; width: 150px; }
+        .opt-btn { padding: 16px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: bold; font-size: 1rem; cursor: pointer; }
+        
+        #overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 100; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; border-radius: 20px; }
+        
+        .hidden { display: none; }
+        .back-btn { background: none; border: none; color: var(--blue); font-weight: bold; cursor: pointer; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
 <div id="game-box">
-    <div id="feedback-overlay">
-        <h2 id="feedback-title"></h2>
-        <div id="feedback-msg" class="feedback-text"></div>
-        <button class="continue-btn" onclick="nextStep()">המשך</button>
+    <div id="menu-screen">
+        <h1 style="text-align:center;">בחרי פרק לתרגול</h1>
+        <button class="menu-btn" onclick="startChapter(0)">
+            <div>1. היסטוריה והכרזת העצמאות</div>
+            <span>עמ' 1-4</span>
+        </button>
+        <button class="menu-btn" onclick="startChapter(1)">
+            <div>2. עקרונות ושיטת הבחירות</div>
+            <span>עמ' 5</span>
+        </button>
+        <button class="menu-btn" onclick="startChapter(2)">
+            <div>3. מוסדות השלטון (הכנסת)</div>
+            <span>עמ' 6-7</span>
+        </button>
     </div>
 
-    <h1 style="text-align:center; font-size: 1.4rem; margin: 0 0 15px 0;">🏛️ סימולטור: מנהיגי המדינה</h1>
-    
-    <div class="status-bar">
-        <span>שלב: <span id="lvl">1</span>/8</span>
-        <span>נקודות יציבות: <span id="stab">100</span>%</span>
-    </div>
-
-    <div id="game-content">
-        <div class="scenario-container" id="scenario">טוען...</div>
+    <div id="game-screen" class="hidden">
+        <button class="back-btn" onclick="showMenu()">➔ חזרה לתפריט</button>
+        <div style="font-size: 0.9rem; color: #666;">שלב: <span id="lvl">1</span></div>
+        <div class="scenario-container" id="scenario-text"></div>
         <div class="options-grid" id="options"></div>
+    </div>
+
+    <div id="overlay">
+        <h2 id="feedback-title"></h2>
+        <p id="feedback-msg" style="line-height:1.6;"></p>
+        <button class="opt-btn" style="background: var(--green); width: 120px;" onclick="nextQuestion()">המשך</button>
     </div>
 </div>
 
 <script>
-    const levels = [
+    const chapters = [
         {
-            text: "בעת כתיבת המגילה, עולה דרישה להסביר מדוע לעם היהודי יש זכות על הארץ ללא קשר לאישור מהעולם. באיזו הצדקה נשתמש?",
-            opts: [
-                { t: "הצדקה טבעית/אוניברסאלית", c: true, e: "נכון! הזכות להגדרה עצמית היא זכות טבעית של כל עם ולא תלויה באישור בינלאומי." },
-                { t: "הצדקה משפטית", c: false, e: "לא מדויק. הצדקה משפטית נשענת על החלטות בינלאומיות (כמו האו\"ם), לא על זכות טבעית." }
+            name: "היסטוריה והכרזה",
+            questions: [
+                { q: "באיזו הצדקה נשתמש כשאנו מזכירים את השואה במגילת העצמאות?", a: "היסטורית", opts: ["היסטורית", "משפטית", "טבעית"], e: "השואה היא אירוע היסטורי שמוכיח את הצורך במדינה." },
+                { q: "מהי הפנייה במגילה שמבטיחה 'אזרחות מלאה ושווה' וייצוג במוסדות?", a: "לערביי ישראל", opts: ["לאו\"ם", "לערביי ישראל", "למדינות שכנות"], e: "זו הפנייה לערבים תושבי המדינה הקוראת להם לשמור על השלום." },
+                { q: "כיצד נקראת ההצדקה המבוססת על 'זכותו של כל עם להגדרה עצמית'?", a: "טבעית", opts: ["משפטית", "טבעית", "היסטורית"], e: "זו זכות אוניברסלית שאינה תלויה באישור חיצוני." }
             ]
         },
         {
-            text: "המלחמה בעיצומה. דוד בן גוריון רוצה לפנות לתושבים הערבים שנמצאים בתוך המדינה החדשה. מה נבטיח להם במגילה?",
-            opts: [
-                { t: "אוטונומיה נפרדת", c: false, e: "לא. המגילה מבטיחה אזרחות מלאה ושווה בתוך המדינה." },
-                { t: "אזרחות מלאה וייצוג במוסדות", c: true, e: "מדויק! המגילה קוראת להם ליטול חלק בבניין המדינה על יסוד אזרחות מלאה ושווה." }
+            name: "עקרונות ובחירות",
+            questions: [
+                { q: "איזה עקרון קובע שהעם הוא מקור הסמכות ובוחר נציגים לזמן קצוב?", a: "שלטון העם", opts: ["שלטון העם", "הכרעת הרוב", "עריצות הרוב"], e: "שלטון העם מתבצע דרך בחירות דמוקרטיות." },
+                { q: "איזה תנאי בחירות מבטיח שהבוחר לא יושפע מלחצים חיצוניים?", a: "חשאיות", opts: ["חשאיות", "מחזוריות", "שוויוניות"], e: "החשאיות מגינה על חופש ההצבעה." },
+                { q: "איזה רכיב בשיטה קובע שהמושבים בכנסת יחולקו לפי אחוז הקולות?", a: "רכיב יחסי", opts: ["רכיב ארצי", "רכיב יחסי", "רכיב רשימתי"], e: "יחסיות משמעותה ייצוג לפי כוח המפלגה בציבור." }
             ]
         },
         {
-            text: "ישראל רוצה להימנע מפיצול יתר של מפלגות קטנות בכנסת כדי לייצב את הממשלה. באיזה כלי נשתמש?",
-            opts: [
-                { t: "אחוז החסימה", c: true, e: "נכון! אחוז החסימה (3.25%) נועד למנוע ממפלגות קטנות מאוד להיכנס לכנסת ולפצל אותה." },
-                { t: "בחירות חשאיות", c: false, e: "לא. חשאיות נועדה להגן על חופש ההצבעה, לא על יציבות הממשלה." }
-            ]
-        },
-        {
-            text: "חבר כנסת מהאופוזיציה טוען שהממשלה פועלת רע מאוד. מהו הכלי המהיר ביותר שלו להפיל אותה?",
-            opts: [
-                { t: "הגשת שאילתה", c: false, e: "לא. שאילתה היא רק כלי לקבלת מידע, היא לא מפילה ממשלה." },
-                { t: "הצבעת אי אמון", c: true, e: "נכון! ברוב של 61 ח\"כים הכנסת יכולה לסיים את כהונת הממשלה." }
-            ]
-        },
-        {
-            text: "שרת החינוך רוצה לקדם חוק חדש, אך יש התנגדות רבה בציבור. היכן יתקיים הדיון המקצועי המעמיק עם מומחים?",
-            opts: [
-                { t: "בוועדות הכנסת", c: true, e: "בדיוק. הוועדות הן המקום לדיון בפרטים, ניסוח ושיח עם אנשי מקצוע." },
-                { t: "במליאת הכנסת", c: false, e: "לא. המליאה היא המקום לדיונים כלליים ולהצבעות סופיות." }
-            ]
-        },
-        {
-            text: "המדינה קבעה שכל הארץ היא אזור בחירה אחד. איזה רכיב בשיטת הבחירות זה מתאר?",
-            opts: [
-                { t: "רכיב יחסי", c: false, e: "לא. יחסי מתייחס לחלוקת המנדטים לפי אחוז הקולות." },
-                { t: "רכיב ארצי", c: true, e: "נכון! רכיב ארצי אומר שכל המדינה נחשבת אזור אחד ולא מחולקת למחוזות." }
-            ]
-        },
-        {
-            text: "במגילה נכתב שהמדינה תהיה פתוחה ל'קיבוץ גלויות'. איזה אופי זה מעניק למדינה?",
-            opts: [
-                { t: "אופי יהודי", c: true, e: "נכון. עלייה וקיבוץ גלויות הם מאפיינים יהודיים מובהקים של המדינה." },
-                { t: "אופי דמוקרטי", c: false, e: "לא. חופש דת או שוויון הם דמוקרטיים, קיבוץ גלויות הוא יהודי." }
-            ]
-        },
-        {
-            text: "הממשלה לא הצליחה להעביר את התקציב עד המועד האחרון. מה קורה עכשיו?",
-            opts: [
-                { t: "הממשלה מוחלפת באופן אוטומטי", c: false, e: "לא מדויק. הכנסת מתפזרת והולכים לבחירות חדשות." },
-                { t: "הכנסת מתפזרת והולכים לבחירות", c: true, e: "נכון! לפי החוק, אי אישור תקציב מוביל לפיזור הכנסת." }
+            name: "מוסדות השלטון",
+            questions: [
+                { q: "איזה גוף בכנסת עוסק בניסוח מפורט של חוקים ודיון עם מומחים?", a: "ועדות הכנסת", opts: ["מליאת הכנסת", "ועדות הכנסת", "הממשלה"], e: "הוועדות הן הזרוע המקצועית של הכנסת." },
+                { q: "מה קורה לממשלה אם הכנסת לא מאשרת את חוק התקציב?", a: "הממשלה נופלת", opts: ["הממשלה ממשיכה", "הממשלה נופלת", "השרים מתחלפים"], e: "אי אישור תקציב נחשב כהבעת אי אמון והכנסת מתפזרת." },
+                { q: "איזה מושג מתאר את סיעות הכנסת שלא נכנסו לממשלה ומבקרות אותה?", a: "אופוזיציה", opts: ["קואליציה", "אופוזיציה", "מזכירות"], e: "האופוזיציה חיונית לפיקוח על השלטון." }
             ]
         }
     ];
 
-    let current = 0;
-    let stability = 100;
-    let lock = false;
+    let currentChapter = null;
+    let currentQ = 0;
 
-    function render() {
-        if (current >= levels.length) { finish(); return; }
-        lock = false;
-        const data = levels[current];
-        document.getElementById('scenario').innerText = data.text;
-        document.getElementById('lvl').innerText = current + 1;
-        document.getElementById('stab').innerText = stability;
+    function startChapter(idx) {
+        currentChapter = chapters[idx];
+        currentQ = 0;
+        document.getElementById('menu-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        loadQuestion();
+    }
+
+    function showMenu() {
+        document.getElementById('menu-screen').classList.remove('hidden');
+        document.getElementById('game-screen').classList.add('hidden');
+    }
+
+    function loadQuestion() {
+        const qData = currentChapter.questions[currentQ];
+        document.getElementById('lvl').innerText = (currentQ + 1) + "/" + currentChapter.questions.length;
+        document.getElementById('scenario-text').innerText = qData.q;
         
         const optsDiv = document.getElementById('options');
         optsDiv.innerHTML = '';
-        data.opts.forEach(o => {
-            const b = document.createElement('button');
-            b.innerText = o.t;
-            b.onclick = () => handle(o);
-            optsDiv.appendChild(b);
+        qData.opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = opt;
+            btn.onclick = () => checkAnswer(opt);
+            optsDiv.appendChild(btn);
         });
     }
 
-    function handle(o) {
-        if (lock) return;
-        lock = true;
-        const overlay = document.getElementById('feedback-overlay');
+    function checkAnswer(choice) {
+        const qData = currentChapter.questions[currentQ];
+        const overlay = document.getElementById('overlay');
         const title = document.getElementById('feedback-title');
         const msg = document.getElementById('feedback-msg');
 
-        if (o.c) {
-            title.innerText = "החלטה נבונה! ⭐";
+        if (choice === qData.a) {
+            title.innerText = "נכון מאוד! ✨";
             title.style.color = "var(--green)";
         } else {
-            stability -= 15;
-            title.innerText = "טעות בשלטון... ⚠️";
+            title.innerText = "לא מדויק... 💡";
             title.style.color = "var(--red)";
         }
-        msg.innerText = o.e;
+        msg.innerText = qData.e;
         overlay.style.display = 'flex';
     }
 
-    function nextStep() {
-        document.getElementById('feedback-overlay').style.display = 'none';
-        current++;
-        render();
+    function nextQuestion() {
+        document.getElementById('overlay').style.display = 'none';
+        currentQ++;
+        if (currentQ < currentChapter.questions.length) {
+            loadQuestion();
+        } else {
+            alert("סיימת את הפרק בהצלחה!");
+            showMenu();
+        }
     }
-
-    function finish() {
-        const box = document.getElementById('game-box');
-        const finalStatus = stability > 50 ? "הדמוקרטיה יציבה!" : "המדינה במשבר...";
-        box.innerHTML = `<div style="text-align:center; padding: 20px;">
-            <h2 style="color:var(--primary)">${finalStatus}</h2>
-            <p style="font-size:1.2rem;">סיימת את כל התרחישים מהקובץ.</p>
-            <p>יציבות סופית: <b>${Math.max(0, stability)}%</b></p>
-            <button onclick="location.reload()" style="background:var(--blue); width:100%">נסה שוב</button>
-        </div>`;
-    }
-
-    render();
 </script>
 </body>
 </html>
