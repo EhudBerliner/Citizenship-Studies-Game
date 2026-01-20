@@ -2,30 +2,41 @@ let allData = [];
 let chapterQuestions = [];
 let currentIdx = 0;
 
-// פונקציית ניקוי אגרסיבית לכל סוגי התווים הנסתרים
+// פונקציית ניקוי אגרסיבית לכל סוגי התווים הנסתרים והרווחים
 function superClean(str) {
     if (!str) return "";
     return str.toString()
-        .replace(/[\u200B-\u200D\uFEFF]/g, "") 
+        .replace(/[\u200B-\u200D\uFEFF]/g, "") // מנקה תווים בלתי נראים (BOM וכו')
         .trim()
-        .replace(/\s+/g, " ");
+        .replace(/\s+/g, " "); // הופך רווחים כפולים לרווח יחיד
 }
 
 window.onload = () => {
+    // טעינת הקובץ
     Papa.parse("Citizenship-Studies-Game.csv", {
         download: true,
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            allData = results.data;
+            // ניקוי כותרות ונתונים כבר בשלב הטעינה
+            allData = results.data.map(row => {
+                let cleanRow = {};
+                for (let key in row) {
+                    cleanRow[superClean(key)] = superClean(row[key]);
+                }
+                return cleanRow;
+            });
             initMenu();
         }
     });
 };
 
 function initMenu() {
+    // מציאת העמודה של הפרק
     const keys = Object.keys(allData[0]);
-    const chapterKey = keys.find(k => k.includes("פרק"));
+    const chapterKey = keys.find(k => k.includes("פרק")) || "שם הפרק";
+    
+    // יצירת רשימת פרקים ייחודית מה-CSV
     const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
     
     const container = document.getElementById('chapter-list');
@@ -42,10 +53,12 @@ function initMenu() {
 function startQuiz(chapterName, chapterKey) {
     chapterQuestions = allData.filter(q => q[chapterKey] === chapterName);
     currentIdx = 0;
+    
     document.getElementById('menu-screen').classList.add('hidden');
     document.getElementById('quiz-screen').classList.remove('hidden');
     document.getElementById('stats').classList.remove('hidden');
     document.getElementById('chapter-name').innerText = chapterName;
+    
     showQuestion();
 }
 
@@ -58,6 +71,7 @@ function showQuestion() {
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = '';
     
+    // פיצול התשובות (מניח שימוש בלוכסן / להפרדה)
     const choices = q["תשובות"].split('/').map(c => superClean(c));
     
     choices.forEach(choice => {
@@ -75,36 +89,38 @@ function handleAnswer(selected, q) {
     const msg = document.getElementById('feedback-message');
     const exp = document.getElementById('explanation-text');
     
-    // איתור עמודות חכם
+    // איתור עמודות חכם למקרה של שינוי קל בשם ב-CSV
     const keys = Object.keys(q);
-    const correctKey = keys.find(k => k.includes("נכונה"));
-    const conceptKey = keys.find(k => k.includes("שם המושג"));
-    const infoKey = keys.find(k => k.includes("הסבר"));
+    const correctKey = keys.find(k => k.includes("נכונה")) || "תשובה נכונה";
+    const conceptKey = keys.find(k => k.includes("מושג")) || "שם המושג בקובץ הלימוד";
+    const infoKey = keys.find(k => k.includes("הסבר")) || "הסבר המושג (לפי חומר הלימוד)";
 
     const correctVal = superClean(q[correctKey]);
     const selectedClean = superClean(selected);
-    const conceptName = q[conceptKey] || "לא נמצא מושג";
-    const explanation = q[infoKey] || "אין הסבר";
+    const conceptName = q[conceptKey] || "מושג כללי";
+    const explanation = q[infoKey] || "אין הסבר זמין";
 
     feedback.classList.remove('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
 
+    // נטרול הכפתורים לאחר לחיצה
+    document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
+
     if (selectedClean === correctVal) {
-        msg.innerHTML = `<h3 style="color: #2ecc71">נכון מאוד! ✅</h3>`;
+        msg.innerHTML = `<h3 style="color: #2ecc71">נכון מאוד! ✨</h3>`;
         feedback.className = "success-style";
     } else {
-        msg.innerHTML = `<h3 style="color: #e74c3c">טעות... ❌</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
+        msg.innerHTML = `<h3 style="color: #e74c3c">לא מדויק... 💡</h3><p>התשובה הנכונה היא: <b>${correctVal}</b></p>`;
         feedback.className = "error-style";
     }
     
+    // הצגת המושג וההסבר בביאור
     exp.innerHTML = `
-        <div style="margin-top:15px; text-align:right; border-top: 2px solid #ddd; padding-top:10px;">
-            <p style="font-size: 1.1rem; margin-bottom: 5px;"><b>מושג הלימוד:</b> <span style="color:#3498db; font-weight:bold;">${conceptName}</span></p>
-            <p><b>הסבר:</b> ${explanation}</p>
+        <div style="margin-top:15px; text-align:right; border-top: 2px solid #eee; padding-top:10px;">
+            <p style="font-size: 1.15rem; margin-bottom: 8px;"><b>מושג הלימוד:</b> <span style="color:#3498db; font-weight:bold;">${conceptName}</span></p>
+            <p><b>הסבר מהחומר:</b> ${explanation}</p>
         </div>
     `;
-    
-    document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
 }
 
 document.getElementById('next-btn').onclick = () => {
@@ -112,7 +128,7 @@ document.getElementById('next-btn').onclick = () => {
     if (currentIdx < chapterQuestions.length) {
         showQuestion();
     } else {
-        alert("הפרק הושלם!");
+        alert("כל הכבוד! סיימת את הפרק.");
         location.reload();
     }
 };
