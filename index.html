@@ -3,125 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ממשק שאלות ותשובות</title>
+    <title>מערכת ניהול תוכן - פרקים ותשובות</title>
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            margin: 20px;
-            line-height: 1.6;
+        :root {
+            --primary-color: #007bff;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
         }
 
-        .container {
-            max-width: 900px;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr; /* חלוקה לניווט ותוכן */
+            gap: 30px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        /* עיצוב אזור הכפתורים */
-        .chapters-nav {
+        /* לוגיקת כפתורי הפרקים - צד ימין */
+        .sidebar-nav {
             display: flex;
-            flex-direction: column; /* הצבת הכפתורים אחד מתחת לשני */
-            gap: 10px;
-            margin-bottom: 40px;
+            flex-direction: column;
+            gap: 15px;
+            position: sticky;
+            top: 20px;
+            height: fit-content;
         }
 
         .chapter-btn {
-            background-color: #ffffff;
-            border: 2px solid #007bff;
-            color: #333;
+            background-color: #fff;
+            border: 2px solid #eee;
             padding: 15px 20px;
-            text-align: right; /* יישור הטקסט לימין */
-            font-size: 18px;
-            font-weight: bold;
+            border-radius: 12px;
             cursor: pointer;
-            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            
+            /* יישור טקסט לימין */
+            text-align: right;
+            width: 100%;
         }
 
         .chapter-btn:hover {
-            background-color: #007bff;
+            border-color: var(--primary-color);
+            background-color: #eef6ff;
+        }
+
+        .chapter-btn.active {
+            background-color: var(--primary-color);
             color: white;
-            transform: translateX(-5px); /* אפקט קטן בתנועה לימין/שמאל */
+            border-color: var(--primary-color);
         }
 
-        /* עיצוב אזור התשובות */
-        .answers-list {
+        /* לוגיקת הצגת תשובות - אחת מתחת לשנייה */
+        .content-area {
             display: flex;
-            flex-direction: column; /* הצגת התשובות אחת מתחת לשנייה */
-            gap: 25px;
+            flex-direction: column;
+            gap: 30px;
         }
 
-        .answer-item {
-            background-color: #fff;
-            padding: 25px;
-            border-radius: 12px;
-            border-right: 6px solid #007bff; /* פס דקורטיבי מימין */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        .answer-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            scroll-margin-top: 20px; /* ריווח בזמן גלילה */
         }
 
-        .answer-item h2 {
+        .answer-card h2 {
             margin-top: 0;
-            color: #007bff;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
+            color: var(--primary-color);
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
         }
 
-        .answer-content {
-            font-size: 16px;
-            color: #444;
+        .answer-body {
+            line-height: 1.8;
+            font-size: 17px;
         }
 
-        hr {
-            border: 0;
-            height: 1px;
-            background: #ddd;
-            margin: 40px 0;
+        /* התאמה לניידים */
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .sidebar-nav {
+                position: relative;
+                top: 0;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="chapters-nav">
-        <button class="chapter-btn" onclick="document.getElementById('section1').scrollIntoView({behavior: 'smooth'})">
-            פרק 1: יסודות המערכת
-        </button>
-        <button class="chapter-btn" onclick="document.getElementById('section2').scrollIntoView({behavior: 'smooth'})">
-            פרק 2: הגדרות מתקדמות
-        </button>
-        <button class="chapter-btn" onclick="document.getElementById('section3').scrollIntoView({behavior: 'smooth'})">
-            פרק 3: פתרון תקלות נפוצות
-        </button>
-    </div>
+<div class="main-layout">
+    <nav class="sidebar-nav">
+        <button class="chapter-btn" onclick="scrollToChapter('chapter1', this)">פרק 1: תחילת עבודה</button>
+        <button class="chapter-btn" onclick="scrollToChapter('chapter2', this)">פרק 2: תצורת מערכת</button>
+        <button class="chapter-btn" onclick="scrollToChapter('chapter3', this)">פרק 3: ניהול משתמשים</button>
+    </nav>
 
-    <hr>
-
-    <div class="answers-list">
-        
-        <div id="section1" class="answer-item">
-            <h2>תשובה לפרק 1: יסודות המערכת</h2>
-            <div class="answer-content">
-                <p>כאן מפורט המידע עבור הפרק הראשון. המבנה האנכי מאפשר למשתמש לקרוא את התכנים ברצף מבלי לעבור בין טאבים.</p>
+    <main class="content-area">
+        <div id="chapter1" class="answer-card">
+            <h2>פרק 1: תחילת עבודה</h2>
+            <div class="answer-body">
+                כאן מופיע התוכן של הפרק הראשון. הממשק חזר למבנה של תפריט צדדי המאפשר ניווט מהיר בין התשובות שמוצגות כרצף אחד ארוך.
             </div>
         </div>
 
-        <div id="section2" class="answer-item">
-            <h2>תשובה לפרק 2: הגדרות מתקדמות</h2>
-            <div class="answer-content">
-                <p>זהו התוכן של הפרק השני. ניתן להוסיף כאן טקסט ארוך, תמונות או רשימות, והכל יישאר מסודר ונגיש.</p>
+        <div id="chapter2" class="answer-card">
+            <h2>פרק 2: תצורת מערכת</h2>
+            <div class="answer-body">
+                בפרק זה ניתן להגדיר את הפרמטרים הטכניים. שים לב שהטקסט בכפתורים נשאר מיושר לימין כפי שביקשת, והתשובות מוצגות בסדר כרונולוגי מלמעלה למטה.
             </div>
         </div>
 
-        <div id="section3" class="answer-item">
-            <h2>תשובה לפרק 3: פתרון תקלות נפוצות</h2>
-            <div class="answer-content">
-                <p>כאן מופיע המידע המסכם. הוספתי גם מנגנון גלילה חלקה (Smooth Scroll) שלחיצה על הכפתור למעלה תקפיץ את המשתמש ישירות לתשובה הרלוונטית.</p>
+        <div id="chapter3" class="answer-card">
+            <h2>פרק 3: ניהול משתמשים</h2>
+            <div class="answer-body">
+                ניהול הרשאות, הוספת עובדים ובקרת גישה. המבנה הנוכחי מאפשר סקירה מהירה של כל החומר במקום אחד.
             </div>
         </div>
-
-    </div>
+    </main>
 </div>
+
+<script>
+    // לוגיקה תפעולית לגלילה וסימון כפתור פעיל
+    function scrollToChapter(id, btn) {
+        // גלילה חלקה לאלמנט
+        document.getElementById(id).scrollIntoView({
+            behavior: 'smooth'
+        });
+
+        // עדכון עיצוב הכפתור הפעיל
+        document.querySelectorAll('.chapter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    }
+</script>
 
 </body>
 </html>
