@@ -2,8 +2,10 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>שומר הדמוקרטיה - V1.1.2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2c3e50">
+    <link rel="manifest" href="manifest.json">
+    <title>שומר הדמוקרטיה - V1.2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -12,8 +14,6 @@
             --accent: #3498db;
             --bg: #f0f2f5;
             --card-bg: #ffffff;
-            --success: #2ecc71;
-            --error: #e74c3c;
         }
 
         body {
@@ -24,12 +24,13 @@
             display: flex;
             justify-content: center;
             direction: rtl;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #app { width: 100%; max-width: 500px; }
 
         header { text-align: center; margin-bottom: 20px; }
-        h1 { color: var(--primary); margin-bottom: 10px; }
+        h1 { color: var(--primary); margin-bottom: 10px; font-size: 1.8rem; }
 
         .card {
             background: var(--card-bg);
@@ -44,47 +45,47 @@
             justify-content: space-between;
             align-items: center;
             background: #fff;
-            padding: 10px;
+            padding: 12px;
             border-radius: 10px;
             margin-bottom: 10px;
-            font-size: 0.9rem;
+            font-size: 1rem;
+            border: 1px solid #ddd;
         }
 
         #options-container { display: flex; flex-direction: column; gap: 12px; }
 
         button {
-            padding: 15px;
+            padding: 18px;
             border: 2px solid var(--accent);
             border-radius: 12px;
             background: white;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
             font-family: inherit;
         }
 
-        button:hover:not(:disabled) { background: #ebf5ff; }
-        button:active { transform: scale(0.98); }
+        button:active { transform: scale(0.96); background: #f0f8ff; }
 
-        .back-btn { background: #eee; border: 1px solid #ccc; padding: 5px 12px; font-size: 0.8rem; }
+        .back-btn { background: #eee; border: 1px solid #ccc; padding: 6px 15px; font-size: 0.9rem; }
 
-        .success-style { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 10px; color: #155724; }
-        .error-style { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 10px; color: #721c24; }
+        .success-style { background: #d4edda; border: 2px solid #28a745; padding: 15px; border-radius: 10px; color: #155724; }
+        .error-style { background: #f8d7da; border: 2px solid #dc3545; padding: 15px; border-radius: 10px; color: #721c24; }
 
         .hidden { display: none !important; }
 
-        #question-text { font-size: 1.25rem; font-weight: bold; margin-bottom: 20px; line-height: 1.4; }
-        #next-btn, #restart-btn { width: 100%; margin-top: 15px; background: var(--primary); color: white; border: none; padding: 18px; }
+        #question-text { font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; line-height: 1.4; color: #333; }
+        #next-btn, #restart-btn { width: 100%; margin-top: 15px; background: var(--primary); color: white; border: none; padding: 18px; font-size: 1.2rem; }
 
-        .result-score { font-size: 3rem; font-weight: bold; color: var(--accent); margin: 20px 0; }
+        .result-score { font-size: 4rem; font-weight: bold; color: var(--accent); margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <div id="app">
     <header>
-        <h1>🏛️ שומר הדמוקרטיה <small style="font-size:0.4em; opacity:0.6">V1.1.2</small></h1>
+        <h1>🏛️ שומר הדמוקרטיה</h1>
         <div id="stats" class="hidden">
             <button class="back-btn" onclick="location.reload()">🏠 חזרה</button>
             <div>
@@ -110,7 +111,7 @@
             
             <div id="feedback-container" class="hidden">
                 <div id="feedback-message"></div>
-                <div id="explanation-text" style="margin-top:10px; font-size:0.95rem; border-top:1px solid #ccc; padding-top:10px;"></div>
+                <div id="explanation-text" style="margin-top:10px; font-size:1rem; border-top:1px solid #ccc; padding-top:10px;"></div>
                 <button id="next-btn">המשך למושג הבא ➔</button>
             </div>
         </section>
@@ -120,8 +121,8 @@
                 <h2>סיכום הפרק</h2>
                 <div id="result-text"></div>
                 <div class="result-score" id="final-score">0%</div>
-                <div id="score-details"></div>
-                <button id="restart-btn" onclick="location.reload()">חזרה לתפריט הראשי</button>
+                <div id="score-details" style="margin-bottom:20px; font-size:1.1rem;"></div>
+                <button id="restart-btn" onclick="location.reload()">חזרה לתפריט</button>
             </div>
         </section>
     </main>
@@ -132,6 +133,11 @@
     let chapterQuestions = [];
     let currentIdx = 0;
     let correctCount = 0;
+
+    // רישום ה-Service Worker עבור התקנה כאפליקציה
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
 
     function superClean(str) {
         if (!str) return "";
@@ -198,7 +204,7 @@
 
     function showQuestion() {
         const q = chapterQuestions[currentIdx];
-        document.getElementById('progress').innerText = `מושג ${currentIdx + 1}/${chapterQuestions.length}`;
+        document.getElementById('progress').innerText = `${currentIdx + 1}/${chapterQuestions.length}`;
         document.getElementById('question-text').innerText = q["שאלה"];
         document.getElementById('feedback-container').classList.add('hidden');
         
@@ -250,18 +256,11 @@
     function showFinalResults() {
         document.getElementById('quiz-screen').classList.add('hidden');
         document.getElementById('result-screen').classList.remove('hidden');
-        
         const percent = Math.round((correctCount / chapterQuestions.length) * 100);
         document.getElementById('final-score').innerText = `${percent}%`;
         document.getElementById('score-details').innerText = `ענית נכון על ${correctCount} מתוך ${chapterQuestions.length} מושגים.`;
-        
-        let msg = "";
-        if (percent === 100) msg = "מושלם! אתה מוכן לבגרות! 🏆";
-        else if (percent >= 80) msg = "כל הכבוד! שליטה מצוינת בחומר. 🌟";
-        else if (percent >= 50) msg = "עבודה טובה, כדאי לחזור על המושגים שטנית בהם. 📚";
-        else msg = "מומלץ לתרגל את הפרק הזה שוב. אל תתייאש! 💪";
-        
-        document.getElementById('result-text').innerHTML = `<h3>${msg}</h3>`;
+        let m = percent >= 80 ? "מצוין! 🏆" : percent >= 50 ? "עבודה טובה! 👍" : "צריך עוד קצת תרגול 💪";
+        document.getElementById('result-text').innerHTML = `<h3>${m}</h3>`;
     }
 </script>
 </body>
