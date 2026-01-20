@@ -3,37 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>סימולטור אזרחות - גרסה 1.0.7</title>
+    <title>סימולטור אזרחות - V1.0.9</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="app">
         <header>
-            <h1>🏛️ שומר הדמוקרטיה <small style="font-size: 0.4em; vertical-align: middle; opacity: 0.7;">V1.0.7</small></h1>
+            <h1>🏛️ שומר הדמוקרטיה <small style="font-size:0.4em">V1.0.9</small></h1>
             <div id="stats" class="hidden">
-                <span id="chapter-name"></span>
-                <span id="progress"></span>
+                <span id="chapter-name"></span> | <span id="progress"></span>
             </div>
         </header>
-
         <main>
             <section id="menu-screen">
-                <h2>בחר פרק לתרגול:</h2>
                 <div id="chapter-list"></div>
             </section>
-
             <section id="quiz-screen" class="hidden">
                 <div class="card">
                     <div id="question-text"></div>
                     <div id="options-container"></div>
                 </div>
-                
                 <div id="feedback-container" class="hidden">
                     <div id="feedback-message"></div>
                     <div id="explanation-text"></div>
-                    <button id="next-btn">לשאלה הבאה ➔</button>
+                    <button id="next-btn">המשך למושג הבא ➔</button>
                 </div>
             </section>
         </main>
