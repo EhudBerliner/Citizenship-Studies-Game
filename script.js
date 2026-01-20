@@ -2,17 +2,26 @@ let allData = [];
 let chapterQuestions = [];
 let currentIdx = 0;
 
+// פונקציית עזר לניקוי טקסט אגרסיבי (מנקה תווים נסתרים, רווחים כפולים ותווי BOM)
+function cleanText(str) {
+    if (!str) return "";
+    return str.toString()
+        .replace(/[\u200B-\u200D\uFEFF]/g, "") // מנקה תווים בלתי נראים
+        .replace(/\s+/g, " ")               // הופך רווחים כפולים לרווח יחיד
+        .trim();                             // מנקה רווחים מהצדדים
+}
+
 window.onload = () => {
     Papa.parse("Citizenship-Studies-Game.csv", {
         download: true,
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            // ניקוי רווחים משמות העמודות ומהנתונים עצמם
+            // ניקוי יסודי של כל הנתונים כבר בטעינה
             allData = results.data.map(row => {
                 let cleanRow = {};
                 for (let key in row) {
-                    cleanRow[key.trim()] = row[key] ? row[key].trim() : "";
+                    cleanRow[cleanText(key)] = cleanText(row[key]);
                 }
                 return cleanRow;
             });
@@ -22,8 +31,8 @@ window.onload = () => {
 };
 
 function initMenu() {
-    // זיהוי שם העמודה של הפרק (מטפל בשינויי נוסח)
-    const chapterKey = Object.keys(allData[0]).find(k => k.includes("פרק"));
+    // מציאת עמודת הפרק באופן דינמי
+    const chapterKey = Object.keys(allData[0]).find(k => k.includes("פרק")) || "שם הפרק";
     const chapters = [...new Set(allData.map(q => q[chapterKey]))].filter(Boolean);
     
     const container = document.getElementById('chapter-list');
@@ -40,12 +49,10 @@ function initMenu() {
 function startQuiz(chapterName, chapterKey) {
     chapterQuestions = allData.filter(q => q[chapterKey] === chapterName);
     currentIdx = 0;
-    
     document.getElementById('menu-screen').classList.add('hidden');
     document.getElementById('quiz-screen').classList.remove('hidden');
     document.getElementById('stats').classList.remove('hidden');
     document.getElementById('chapter-name').innerText = chapterName;
-    
     showQuestion();
 }
 
@@ -58,9 +65,9 @@ function showQuestion() {
     const optionsContainer = document.getElementById('options-container');
     optionsContainer.innerHTML = '';
     
-    // מציאת עמודת התשובות והתשובה הנכונה
+    // פיצול התשובות
     const choicesStr = q["תשובות"] || "";
-    const choices = choicesStr.split('/').map(c => c.trim());
+    const choices = choicesStr.split('/').map(c => cleanText(c));
     
     choices.forEach(choice => {
         const btn = document.createElement('button');
@@ -80,23 +87,25 @@ function handleAnswer(selected, q) {
     feedback.classList.remove('hidden');
     document.getElementById('next-btn').classList.remove('hidden');
 
-    // איתור דינמי של העמודות כדי למנוע undefined
-    const correctAns = q["תשובה נכונה"] || q["תשובה_נכונה"];
-    const conceptName = q["שם המושג בקובץ הלימוד"] || q["שם המושג"] || "מושג כללי";
-    const explanation = q["הסבר המושג (לפי חומר הלימוד)"] || q["הסבר המושג"] || "";
+    // איתור עמודות התשובה והמושגים
+    const correctAns = cleanText(q["תשובה נכונה"] || q["תשובה_נכונה"]);
+    const conceptName = q["שם המושג בקובץ הלימוד"] || "מושג כללי";
+    const explanation = q["הסבר המושג (לפי חומר הלימוד)"] || "";
 
-    // ניקוי רווחים להשוואה מדויקת
-    if (selected.trim() === correctAns.trim()) {
-        msg.innerHTML = `<h3 style="color: #155724">מעולה! תשובה נכונה ✨</h3>`;
+    const selectedClean = cleanText(selected);
+
+    // לוגיקת בדיקה חסינה
+    if (selectedClean === correctAns && correctAns !== "") {
+        msg.innerHTML = `<h3 style="color: #155724">נכון מאוד! ✨</h3>`;
         feedback.className = "success-style";
     } else {
-        msg.innerHTML = `<h3 style="color: #721c24">לא מדויק... 💡</h3><p>התשובה הנכונה היא: <b>${correctAns}</b></p>`;
+        msg.innerHTML = `<h3 style="color: #721c24">טעות... 💡</h3><p>התשובה הנכונה: <b>${correctAns}</b></p>`;
         feedback.className = "error-style";
     }
     
     exp.innerHTML = `
-        <div style="margin-top:15px; text-align:right; border-top: 1px solid #ccc; padding-top:10px;">
-            <p><b>שם המושג:</b> ${conceptName}</p>
+        <div style="margin-top:15px; text-align:right; border-top: 1px dotted #666; padding-top:10px;">
+            <p><b>מושג:</b> ${conceptName}</p>
             <p><b>הסבר:</b> ${explanation}</p>
         </div>
     `;
@@ -109,7 +118,7 @@ document.getElementById('next-btn').onclick = () => {
     if (currentIdx < chapterQuestions.length) {
         showQuestion();
     } else {
-        alert("כל הכבוד! סיימת את הפרק.");
+        alert("סיימת את הפרק בהצלחה!");
         location.reload();
     }
 };
