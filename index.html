@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>שומר הדמוקרטיה - V1.1.1</title>
+    <title>שומר הדמוקרטיה - V1.1.2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
@@ -12,6 +12,8 @@
             --accent: #3498db;
             --bg: #f0f2f5;
             --card-bg: #ffffff;
+            --success: #2ecc71;
+            --error: #e74c3c;
         }
 
         body {
@@ -24,16 +26,9 @@
             direction: rtl;
         }
 
-        #app {
-            width: 100%;
-            max-width: 500px;
-        }
+        #app { width: 100%; max-width: 500px; }
 
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
+        header { text-align: center; margin-bottom: 20px; }
         h1 { color: var(--primary); margin-bottom: 10px; }
 
         .card {
@@ -55,11 +50,7 @@
             font-size: 0.9rem;
         }
 
-        #options-container {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        #options-container { display: flex; flex-direction: column; gap: 12px; }
 
         button {
             padding: 15px;
@@ -76,12 +67,7 @@
         button:hover:not(:disabled) { background: #ebf5ff; }
         button:active { transform: scale(0.98); }
 
-        .back-btn {
-            background: #eee;
-            border: 1px solid #ccc;
-            padding: 5px 12px;
-            font-size: 0.8rem;
-        }
+        .back-btn { background: #eee; border: 1px solid #ccc; padding: 5px 12px; font-size: 0.8rem; }
 
         .success-style { background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 10px; color: #155724; }
         .error-style { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 10px; color: #721c24; }
@@ -89,16 +75,18 @@
         .hidden { display: none !important; }
 
         #question-text { font-size: 1.25rem; font-weight: bold; margin-bottom: 20px; line-height: 1.4; }
-        #next-btn { width: 100%; margin-top: 15px; background: var(--primary); color: white; border: none; }
+        #next-btn, #restart-btn { width: 100%; margin-top: 15px; background: var(--primary); color: white; border: none; padding: 18px; }
+
+        .result-score { font-size: 3rem; font-weight: bold; color: var(--accent); margin: 20px 0; }
     </style>
 </head>
 <body>
 
 <div id="app">
     <header>
-        <h1>🏛️ שומר הדמוקרטיה <small style="font-size:0.4em; opacity:0.6">V1.1.1</small></h1>
+        <h1>🏛️ שומר הדמוקרטיה <small style="font-size:0.4em; opacity:0.6">V1.1.2</small></h1>
         <div id="stats" class="hidden">
-            <button class="back-btn" onclick="initMenu()">🏠 חזרה</button>
+            <button class="back-btn" onclick="location.reload()">🏠 חזרה</button>
             <div>
                 <span id="chapter-name" style="font-weight: bold;"></span> | 
                 <span id="progress"></span>
@@ -126,6 +114,16 @@
                 <button id="next-btn">המשך למושג הבא ➔</button>
             </div>
         </section>
+
+        <section id="result-screen" class="hidden">
+            <div class="card" style="text-align: center;">
+                <h2>סיכום הפרק</h2>
+                <div id="result-text"></div>
+                <div class="result-score" id="final-score">0%</div>
+                <div id="score-details"></div>
+                <button id="restart-btn" onclick="location.reload()">חזרה לתפריט הראשי</button>
+            </div>
+        </section>
     </main>
 </div>
 
@@ -133,25 +131,20 @@
     let allData = [];
     let chapterQuestions = [];
     let currentIdx = 0;
+    let correctCount = 0;
 
-    // ניקוי טקסט אגרסיבי
     function superClean(str) {
         if (!str) return "";
         return str.toString().replace(/[\u200B-\u200D\uFEFF]/g, "").trim().replace(/\s+/g, " ");
     }
 
-    // טעינת הנתונים
     window.onload = () => {
         Papa.parse("Citizenship-Studies-Game.csv", {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
+            download: true, header: true, skipEmptyLines: true,
             complete: function(results) {
                 allData = results.data.map(row => {
                     let cleanRow = {};
-                    for (let key in row) {
-                        cleanRow[superClean(key)] = superClean(row[key]);
-                    }
+                    for (let key in row) { cleanRow[superClean(key)] = superClean(row[key]); }
                     return cleanRow;
                 });
                 initMenu();
@@ -159,7 +152,6 @@
         });
     };
 
-    // בניית תפריט הפרקים
     function initMenu() {
         const keys = Object.keys(allData[0]);
         const chapterKey = keys.find(k => k.includes("פרק"));
@@ -167,6 +159,7 @@
         
         document.getElementById('menu-screen').classList.remove('hidden');
         document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.add('hidden');
         document.getElementById('stats').classList.add('hidden');
 
         const container = document.getElementById('chapter-list');
@@ -179,15 +172,11 @@
         });
     }
 
-    // התחלת פרק עם הגרלה: שאלה אחת למושג + ערבוב מושגים
     function startQuiz(chapterName, chapterKey) {
         const keys = Object.keys(allData[0]);
         const conceptKey = keys.find(k => k.includes("מושג"));
-        
-        // 1. סינון לפרק
         const filtered = allData.filter(q => q[chapterKey] === chapterName);
         
-        // 2. קיבוץ לפי מושג
         const grouped = {};
         filtered.forEach(q => {
             const cName = q[conceptKey] || "כללי";
@@ -195,15 +184,11 @@
             grouped[cName].push(q);
         });
 
-        // 3. בחירת שאלה אחת אקראית מכל קבוצת מושג
-        chapterQuestions = Object.values(grouped).map(questions => {
-            return questions[Math.floor(Math.random() * questions.length)];
-        });
-
-        // 4. ערבוב סדר המושגים בתוך הפרק
+        chapterQuestions = Object.values(grouped).map(qs => qs[Math.floor(Math.random() * qs.length)]);
         chapterQuestions.sort(() => Math.random() - 0.5);
 
         currentIdx = 0;
+        correctCount = 0;
         document.getElementById('menu-screen').classList.add('hidden');
         document.getElementById('quiz-screen').classList.remove('hidden');
         document.getElementById('stats').classList.remove('hidden');
@@ -211,7 +196,6 @@
         showQuestion();
     }
 
-    // הצגת השאלה וערבוב תשובות
     function showQuestion() {
         const q = chapterQuestions[currentIdx];
         document.getElementById('progress').innerText = `מושג ${currentIdx + 1}/${chapterQuestions.length}`;
@@ -222,7 +206,6 @@
         optionsContainer.innerHTML = '';
         
         const choices = q["תשובות"].split('/').map(c => superClean(c)).sort(() => Math.random() - 0.5);
-        
         choices.forEach(choice => {
             const btn = document.createElement('button');
             btn.innerText = choice;
@@ -231,7 +214,6 @@
         });
     }
 
-    // בדיקת תשובה והצגת הסבר
     function handleAnswer(selected, q) {
         const feedback = document.getElementById('feedback-container');
         const msg = document.getElementById('feedback-message');
@@ -246,13 +228,13 @@
         document.querySelectorAll('#options-container button').forEach(b => b.disabled = true);
 
         if (superClean(selected) === correctVal) {
+            correctCount++;
             msg.innerHTML = `<h3 style="margin:0">נכון מאוד! ✅</h3>`;
             feedback.className = "success-style";
         } else {
             msg.innerHTML = `<h3 style="margin:0">טעות ❌</h3><p>התשובה הנכונה: <b>${correctVal}</b></p>`;
             feedback.className = "error-style";
         }
-        
         exp.innerHTML = `<b>מושג: ${conceptName}</b><br>${info}`;
     }
 
@@ -261,11 +243,26 @@
         if (currentIdx < chapterQuestions.length) {
             showQuestion();
         } else {
-            alert("השלמת את כל המושגים בפרק זה!");
-            initMenu();
+            showFinalResults();
         }
     };
-</script>
 
+    function showFinalResults() {
+        document.getElementById('quiz-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        
+        const percent = Math.round((correctCount / chapterQuestions.length) * 100);
+        document.getElementById('final-score').innerText = `${percent}%`;
+        document.getElementById('score-details').innerText = `ענית נכון על ${correctCount} מתוך ${chapterQuestions.length} מושגים.`;
+        
+        let msg = "";
+        if (percent === 100) msg = "מושלם! אתה מוכן לבגרות! 🏆";
+        else if (percent >= 80) msg = "כל הכבוד! שליטה מצוינת בחומר. 🌟";
+        else if (percent >= 50) msg = "עבודה טובה, כדאי לחזור על המושגים שטנית בהם. 📚";
+        else msg = "מומלץ לתרגל את הפרק הזה שוב. אל תתייאש! 💪";
+        
+        document.getElementById('result-text').innerHTML = `<h3>${msg}</h3>`;
+    }
+</script>
 </body>
 </html>
