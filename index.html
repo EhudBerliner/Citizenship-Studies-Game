@@ -257,6 +257,18 @@
     .term-item.open .term-def { display: block; }
     .no-results { text-align: center; padding: 30px 0; color: var(--muted); font-size: .95rem; }
 
+    .sub-header {
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--navy2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 10px 4px 6px;
+      margin-top: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 6px;
+    }
+
     /* ── QUIZ ── */
     .card {
       background: var(--white); border-radius: var(--radius);
@@ -412,9 +424,10 @@ const TERMS_FILE     = "terms.csv";
 const QUESTIONS_FILE = "questions.csv";
 
 // ── State ─────────────────────────────────────────────────
-let termsData     = {};   // { chapter: [{name, def}] }
-let allTerms      = [];   // flat list
-let termsMap      = {};   // { termName: {def, chapter} }
+// termsData: { chapter: { sub: [{name,def,sub,chapter}] } }
+let termsData     = {};
+let allTerms      = [];   // flat list [{name,def,sub,chapter}]
+let termsMap      = {};   // { termName: {def,sub,chapter} }
 let questionsData = [];   // raw question rows
 
 let quizChapterName = "";
@@ -435,12 +448,17 @@ Papa.parse(`${TERMS_FILE}?v=${Date.now()}`, {
   complete(res) {
     res.data.forEach(row => {
       const r = {}; for (let k in row) r[clean(k)] = clean(row[k]);
-      const { "מושג":name, "ביאור":def, "פרק":chapter } = r;
+      const name    = r["מושג"];
+      const def     = r["ביאור"];
+      const chapter = r["פרק"];
+      const sub     = r["תת-פרק"] || "";
       if (!name) return;
-      if (!termsData[chapter]) termsData[chapter] = [];
-      termsData[chapter].push({name, def, chapter});
-      allTerms.push({name, def, chapter});
-      termsMap[name] = {def, chapter};
+      if (!termsData[chapter]) termsData[chapter] = {};
+      const key = sub || "—";
+      if (!termsData[chapter][key]) termsData[chapter][key] = [];
+      termsData[chapter][key].push({name, def, sub, chapter});
+      allTerms.push({name, def, sub, chapter});
+      termsMap[name] = {def, sub, chapter};
     });
     onLoaded();
   },
@@ -465,30 +483,47 @@ function renderDict(data, hl='') {
   if (!chapters.length) { c.innerHTML='<div class="no-results">לא נמצאו מונחים 🔍</div>'; return; }
 
   chapters.forEach((chapter, ci) => {
-    const terms = data[chapter];
-    const open  = ci === 0 || !!hl;
+    const subsObj   = data[chapter];        // { subName: [terms] }
+    const subNames  = Object.keys(subsObj);
+    const totalTerms = subNames.reduce((n,s) => n + subsObj[s].length, 0);
+    const autoOpen  = ci === 0 || !!hl;
+    const hasRealSubs = !(subNames.length === 1 && subNames[0] === '—');
 
     const section = document.createElement('div'); section.className = 'chapter-section';
 
+    // Chapter header
     const header = document.createElement('div');
-    header.className = 'chapter-header' + (open?' open':'');
-    header.innerHTML = `<span>${chapter} <small style="color:var(--muted);font-size:.78rem;font-weight:400;">(${terms.length})</small></span><span class="toggle-icon">▼</span>`;
+    header.className = 'chapter-header' + (autoOpen?' open':'');
+    header.innerHTML = `<span>${chapter} <small style="color:var(--muted);font-size:.78rem;font-weight:400;">(${totalTerms})</small></span><span class="toggle-icon">▼</span>`;
 
-    const list = document.createElement('div');
-    list.className = 'term-list' + (open?' open':'');
-    header.onclick = () => { header.classList.toggle('open'); list.classList.toggle('open'); };
+    const chapterBody = document.createElement('div');
+    chapterBody.className = 'term-list' + (autoOpen?' open':'');
+    header.onclick = () => { header.classList.toggle('open'); chapterBody.classList.toggle('open'); };
 
-    terms.forEach(t => {
-      const item = document.createElement('div');
-      item.className = 'term-item' + (hl?' open':'');
-      const nameHtml = hl ? t.name.replace(new RegExp(`(${escRe(hl)})`,'gi'),'<mark style="background:#fef9c3">$1</mark>') : t.name;
-      const defHtml  = hl ? t.def.replace( new RegExp(`(${escRe(hl)})`,'gi'),'<mark style="background:#fef9c3">$1</mark>') : t.def;
-      item.innerHTML = `<div class="term-name">${nameHtml}<span class="term-expand-icon">▼</span></div><div class="term-def">${defHtml}</div>`;
-      item.onclick   = () => { item.classList.toggle('open'); if(item.classList.contains('open')) setTimeout(()=>item.scrollIntoView({behavior:'smooth',block:'nearest'}),50); };
-      list.appendChild(item);
+    subNames.forEach(sub => {
+      const terms = subsObj[sub];
+
+      // Sub-chapter label (only when real subs exist)
+      if (hasRealSubs && sub !== '—') {
+        const subLabel = document.createElement('div');
+        subLabel.className = 'sub-header';
+        subLabel.textContent = sub;
+        chapterBody.appendChild(subLabel);
+      }
+
+      // Term items
+      terms.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'term-item' + (hl?' open':'');
+        const nameHtml = hl ? t.name.replace(new RegExp(`(${escRe(hl)})`,'gi'),'<mark style="background:#fef9c3">$1</mark>') : t.name;
+        const defHtml  = hl ? t.def.replace( new RegExp(`(${escRe(hl)})`,'gi'),'<mark style="background:#fef9c3">$1</mark>') : t.def;
+        item.innerHTML = `<div class="term-name">${nameHtml}<span class="term-expand-icon">▼</span></div><div class="term-def">${defHtml}</div>`;
+        item.onclick   = () => { item.classList.toggle('open'); if(item.classList.contains('open')) setTimeout(()=>item.scrollIntoView({behavior:'smooth',block:'nearest'}),50); };
+        chapterBody.appendChild(item);
+      });
     });
 
-    section.appendChild(header); section.appendChild(list); c.appendChild(section);
+    section.appendChild(header); section.appendChild(chapterBody); c.appendChild(section);
   });
 }
 
@@ -499,8 +534,10 @@ function onSearch(val) {
   const filtered = {};
   allTerms.forEach(t => {
     if (t.name.includes(q) || t.def.includes(q)) {
-      if (!filtered[t.chapter]) filtered[t.chapter] = [];
-      filtered[t.chapter].push(t);
+      const sub = t.sub || '—';
+      if (!filtered[t.chapter]) filtered[t.chapter] = {};
+      if (!filtered[t.chapter][sub]) filtered[t.chapter][sub] = [];
+      filtered[t.chapter][sub].push(t);
     }
   });
   renderDict(filtered, q);
@@ -515,7 +552,7 @@ function drawTerm() {
   lastFlash = i;
   const t = allTerms[i];
   $('flash-term').textContent    = t.name;
-  $('flash-chapter').textContent = t.chapter;
+  $('flash-chapter').textContent = t.sub ? `${t.chapter} ← ${t.sub}` : t.chapter;
   $('flash-def').textContent     = t.def;
   $('flash-def').style.display   = 'none';
 }
@@ -530,7 +567,8 @@ function initQuizMenu() {
   const container = $('chapter-list'); container.innerHTML = '';
 
   chapters.forEach(name => {
-    const termCount = (termsData[name]||[]).length;
+    const chapterSubs = termsData[name] || {};
+    const termCount   = Object.values(chapterSubs).reduce((n,arr)=>n+arr.length, 0);
     const qCount    = questionsData.filter(r=>r["פרק"]===name).length;
     const btn = document.createElement('button');
     btn.className = 'chapter-btn';
