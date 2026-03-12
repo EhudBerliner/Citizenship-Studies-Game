@@ -509,31 +509,69 @@
   <!-- ══ AUDIO PLAYER ══ -->
   <div id="screen-audio" class="screen">
 
-    <!-- Sub-screens within audio tab -->
+    <!-- ── Sub-screen: Playlist Library ── -->
     <div id="audio-playlists" class="audio-subscreen active">
-      <div class="section-label" style="margin-bottom:16px">ספריית מוזיקה</div>
 
-      <div id="audio-folder-input-wrap" class="audio-folder-card">
-        <div class="audio-folder-icon">📂</div>
-        <div class="audio-folder-text">
-          <div class="audio-folder-title">בחר תיקיית שירים</div>
-          <div class="audio-folder-sub">כל תת-תיקייה תהפוך לפלייליסט</div>
-        </div>
-        <label class="audio-open-btn" for="folder-picker">פתח</label>
-        <input type="file" id="folder-picker" webkitdirectory multiple accept="audio/*" style="display:none" onchange="handleFolderPick(this.files)">
+      <!-- Source toggle -->
+      <div class="audio-source-toggle">
+        <button class="ast-btn active" id="ast-server" onclick="setAudioSource('server')">
+          <span class="ast-icon">🌐</span>
+          <span>מהאתר</span>
+        </button>
+        <button class="ast-btn" id="ast-local" onclick="setAudioSource('local')">
+          <span class="ast-icon">📱</span>
+          <span>מהמכשיר</span>
+        </button>
       </div>
 
-      <div id="playlists-list"></div>
+      <!-- SERVER panel -->
+      <div id="audio-server-panel">
+        <div class="audio-server-header">
+          <div class="audio-server-url-row">
+            <input id="server-url-input" class="server-url-input" type="url"
+              placeholder="https://yoursite.com/music/"
+              value="" />
+            <button class="server-scan-btn" onclick="scanServerUrl()">סרוק</button>
+          </div>
+          <div id="server-scan-status" class="server-scan-status"></div>
+        </div>
+
+        <!-- saved server folders -->
+        <div id="server-playlists-list"></div>
+      </div>
+
+      <!-- LOCAL panel -->
+      <div id="audio-local-panel" style="display:none">
+        <div class="audio-folder-card">
+          <div class="audio-folder-icon">📂</div>
+          <div class="audio-folder-text">
+            <div class="audio-folder-title">בחר תיקיית שירים</div>
+            <div class="audio-folder-sub">כל תת-תיקייה תהפוך לפלייליסט</div>
+          </div>
+          <label class="audio-open-btn" for="folder-picker">פתח</label>
+          <input type="file" id="folder-picker" webkitdirectory multiple accept="audio/*"
+            style="display:none" onchange="handleFolderPick(this.files)">
+        </div>
+        <div id="local-playlists-list"></div>
+      </div>
+
     </div>
 
+    <!-- ── Sub-screen: Track list ── -->
     <div id="audio-tracklist" class="audio-subscreen">
-      <button class="audio-back-btn" onclick="showPlaylists()">← חזרה</button>
+      <div class="tracklist-topbar">
+        <button class="audio-back-btn" onclick="showPlaylists()">← חזרה</button>
+        <button class="tl-download-all-btn" id="tl-download-all" onclick="downloadPlaylist()" title="הורד כל הפלייליסט" style="display:none">
+          ⬇ הורד הכל
+        </button>
+      </div>
       <div class="audio-playlist-header">
         <div class="audio-playlist-art" id="pl-art">🎵</div>
-        <div>
+        <div style="flex:1">
           <div class="audio-playlist-name" id="pl-name"></div>
           <div class="audio-playlist-count" id="pl-count"></div>
         </div>
+        <div class="pl-source-badge" id="pl-source-badge"></div>
       </div>
       <div id="tracklist-items"></div>
     </div>
@@ -601,6 +639,101 @@
 <style>
 /* ══ AUDIO PLAYER STYLES ══ */
 
+/* Source toggle */
+.audio-source-toggle {
+  display: flex; gap: 8px; margin-bottom: 18px;
+}
+.ast-btn {
+  flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
+  padding:12px 10px; border-radius:12px; border:2px solid var(--border);
+  background:var(--white); color:var(--muted); cursor:pointer;
+  font-family:'Heebo',sans-serif; font-size:.88rem; font-weight:600;
+  transition: all .18s;
+}
+.ast-btn:hover { border-color: var(--navy2); color: var(--navy); }
+.ast-btn.active { border-color: var(--navy); background: var(--navy); color: white; }
+.ast-icon { font-size:1.1rem; }
+
+/* Server panel */
+.audio-server-header { margin-bottom:16px; }
+.audio-server-url-row {
+  display:flex; gap:8px; align-items:stretch;
+}
+.server-url-input {
+  flex:1; padding:10px 14px; border-radius:10px;
+  border:2px solid var(--border); font-family:'Heebo',sans-serif;
+  font-size:.85rem; color:var(--text); background:var(--white);
+  outline:none; transition:border-color .2s; direction:ltr; text-align:left;
+}
+.server-url-input:focus { border-color:var(--navy2); }
+.server-scan-btn {
+  padding:10px 18px; border-radius:10px; border:none;
+  background:var(--navy); color:white; cursor:pointer;
+  font-family:'Heebo',sans-serif; font-weight:700; font-size:.88rem;
+  white-space:nowrap; transition:background .15s;
+}
+.server-scan-btn:hover { background:var(--navy2); }
+.server-scan-status {
+  margin-top:8px; font-size:.8rem; color:var(--muted); min-height:18px;
+}
+.server-scan-status.err { color:var(--err); }
+.server-scan-status.ok  { color:var(--ok); }
+
+/* Saved server folder entry */
+.server-folder-item {
+  display:flex; align-items:center; gap:12px;
+  background:var(--white); border:2px solid var(--border);
+  border-radius:var(--radius); padding:13px 14px;
+  margin-bottom:8px;
+}
+.sfi-icon { font-size:1.5rem; flex-shrink:0; }
+.sfi-info { flex:1; min-width:0; }
+.sfi-name { font-weight:700; font-size:.9rem; color:var(--navy); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sfi-url  { font-size:.72rem; color:var(--muted); margin-top:2px; direction:ltr; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sfi-actions { display:flex; gap:6px; flex-shrink:0; }
+.sfi-btn {
+  padding:6px 12px; border-radius:8px; border:none; cursor:pointer;
+  font-family:'Heebo',sans-serif; font-size:.78rem; font-weight:700; transition:background .15s;
+}
+.sfi-btn.open   { background:var(--navy); color:white; }
+.sfi-btn.open:hover { background:var(--navy2); }
+.sfi-btn.del    { background:#fee2e2; color:var(--err); }
+.sfi-btn.del:hover  { background:#fecaca; }
+
+/* Download badge on server tracks */
+.track-dl-btn {
+  background:none; border:none; cursor:pointer; color:var(--muted);
+  font-size:.95rem; padding:4px 6px; border-radius:6px; flex-shrink:0;
+  transition: all .15s;
+}
+.track-dl-btn:hover { background:#e8f8ef; color:var(--ok); }
+.track-dl-btn.downloaded { color:var(--ok); }
+
+/* Download progress */
+.track-dl-progress {
+  height:2px; background:var(--border); border-radius:1px; margin-top:4px; overflow:hidden; display:none;
+}
+.track-dl-progress-bar { height:100%; background:var(--ok); width:0%; transition:width .15s; }
+.track-dl-progress.show { display:block; }
+
+/* Tracklist topbar */
+.tracklist-topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.tl-download-all-btn {
+  background:var(--ok-bg); color:var(--ok); border:1px solid #86efac;
+  border-radius:10px; padding:7px 14px; font-size:.8rem; font-weight:700;
+  cursor:pointer; font-family:'Heebo',sans-serif; transition:background .15s;
+}
+.tl-download-all-btn:hover { background:#d1fae5; }
+
+.pl-source-badge {
+  font-size:.72rem; font-weight:700; padding:3px 10px; border-radius:20px;
+  background:var(--navy); color:white; flex-shrink:0;
+}
+
+/* ── existing styles below ── */
 .audio-folder-card {
   display: flex; align-items: center; gap: 14px;
   background: var(--white); border: 2px dashed var(--border);
@@ -625,7 +758,7 @@
 
 .audio-back-btn {
   background: none; border: none; color: var(--navy); cursor:pointer;
-  font-size:.9rem; font-weight:700; padding:0 0 14px 0;
+  font-size:.9rem; font-weight:700; padding:0;
   font-family:'Heebo',sans-serif; display:flex; align-items:center; gap:6px;
 }
 
@@ -666,6 +799,11 @@
   font-size:.7rem; font-weight:700; background:var(--gold); color:var(--navy);
   padding:2px 8px; border-radius:20px;
 }
+.playlist-card-src {
+  font-size:.68rem; font-weight:700; padding:2px 7px; border-radius:20px;
+  background:#e0e7ff; color:#3730a3;
+}
+.playlist-card-src.local { background:#dcfce7; color:#166534; }
 
 /* Track rows */
 .track-row {
@@ -844,6 +982,15 @@
 .audio-empty .ae-icon { font-size:3rem; margin-bottom:12px; }
 .audio-empty .ae-title { font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:6px; }
 .audio-empty .ae-sub   { font-size:.85rem; line-height:1.7; }
+
+/* Download toast */
+#dl-toast {
+  position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--navy); color:white; padding:10px 20px; border-radius:20px;
+  font-size:.85rem; font-weight:600; z-index:400;
+  opacity:0; transition:all .3s; pointer-events:none; white-space:nowrap;
+}
+#dl-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 </style>
 
 <script>
@@ -1267,129 +1414,494 @@ function switchTab(tab) {
 //  AUDIO PLAYER
 // ════════════════════════════════════════════════════════════
 
-// ── State ─────────────────────────────────────────────────
-const AUDIO_STORAGE_KEY = 'audioPlayerState';
+// ── Constants ─────────────────────────────────────────────
+const AUDIO_STORAGE_KEY    = 'audioPlayerState';
+const SERVER_FOLDERS_KEY   = 'audioServerFolders';   // [{name, url}]
+const DOWNLOADED_KEY_PFX   = 'dl_';                  // + playlistName+trackTitle → base64
+const AUDIO_SOURCE_KEY     = 'audioSourceMode';      // 'server' | 'local'
 
-let playlists       = [];   // [{name, tracks:[{title,artist,duration,file,art}]}]
+// ── State ─────────────────────────────────────────────────
+let audioSource     = localStorage.getItem(AUDIO_SOURCE_KEY) || 'server';
+let playlists       = [];   // [{name, source:'server'|'local', baseUrl?, tracks:[…]}]
+let serverFolders   = [];   // [{name, url}]  — persisted
 let currentPlaylist = -1;
 let currentTrack    = -1;
 let audioEl         = new Audio();
 let wakeLock        = null;
 let isSeeking       = false;
 
-// ── Persistence ───────────────────────────────────────────
-function saveAudioState() {
-  if (currentPlaylist < 0 || currentTrack < 0) return;
-  const state = {
-    playlistName: playlists[currentPlaylist]?.name,
-    trackTitle:   playlists[currentPlaylist]?.tracks[currentTrack]?.title,
-    currentTime:  audioEl.currentTime,
-    volume:       audioEl.volume
-  };
-  try { localStorage.setItem(AUDIO_STORAGE_KEY, JSON.stringify(state)); } catch(e){}
+// ── Init ──────────────────────────────────────────────────
+(function initAudio() {
+  serverFolders = loadServerFolders();
+  setAudioSource(audioSource, true);
+})();
+
+// ── Source toggle ─────────────────────────────────────────
+function setAudioSource(src, silent) {
+  audioSource = src;
+  try { localStorage.setItem(AUDIO_SOURCE_KEY, src); } catch(e){}
+  $('ast-server').classList.toggle('active', src === 'server');
+  $('ast-local').classList.toggle('active',  src === 'local');
+  $('audio-server-panel').style.display = src === 'server' ? '' : 'none';
+  $('audio-local-panel').style.display  = src === 'local'  ? '' : 'none';
+  if (src === 'server' && !silent) renderServerFolders();
 }
 
-function loadAudioState() {
+// ════════════════════════════════════════════════════════════
+//  SERVER SOURCE
+// ════════════════════════════════════════════════════════════
+
+function loadServerFolders() {
+  try { return JSON.parse(localStorage.getItem(SERVER_FOLDERS_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveServerFolders() {
+  try { localStorage.setItem(SERVER_FOLDERS_KEY, JSON.stringify(serverFolders)); } catch(e){}
+}
+
+async function scanServerUrl() {
+  const rawUrl = $('server-url-input').value.trim();
+  if (!rawUrl) { setStatus('הכנס כתובת URL', 'err'); return; }
+
+  let baseUrl = rawUrl;
+  if (!baseUrl.endsWith('/')) baseUrl += '/';
+
+  setStatus('🔍 סורק...', '');
+  const scanBtn = document.querySelector('.server-scan-btn');
+  scanBtn.disabled = true;
+
   try {
-    const raw = localStorage.getItem(AUDIO_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch(e) { return null; }
+    // Fetch the directory listing page
+    const res = await fetch(baseUrl, { headers: { 'Accept': 'text/html' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = await res.text();
+
+    // Parse links from directory listing (Apache/nginx style)
+    const parser = new DOMParser();
+    const doc    = parser.parseFromString(html, 'text/html');
+    const links  = [...doc.querySelectorAll('a[href]')];
+
+    // Find sub-folders and audio files
+    const subFolders = links
+      .map(a => a.getAttribute('href'))
+      .filter(h => h && !h.startsWith('?') && !h.startsWith('/') && !h.startsWith('..') && h.endsWith('/'));
+
+    const audioFiles = links
+      .map(a => a.getAttribute('href'))
+      .filter(h => h && /\.(mp3|wav|aac|m4a|ogg|flac)$/i.test(h));
+
+    if (!subFolders.length && !audioFiles.length) {
+      setStatus('⚠️ לא נמצאו תיקיות או קבצי אודיו. ודא שהשרת מציג תוכן תיקייה.', 'err');
+      scanBtn.disabled = false;
+      return;
+    }
+
+    // Determine folder name from URL
+    const urlParts = baseUrl.replace(/\/$/, '').split('/');
+    const folderName = decodeURIComponent(urlParts[urlParts.length - 1]) || 'ספרייה';
+
+    // If there are direct audio files at root, treat root as one playlist
+    // If sub-folders exist, each sub-folder becomes a playlist
+    let newPlaylists = [];
+
+    if (audioFiles.length) {
+      // Root has audio files → one playlist
+      const tracks = audioFiles.map(href => ({
+        title:    decodeURIComponent(href).replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]+/, ''),
+        artist:   '',
+        art:      null,
+        duration: 0,
+        url:      baseUrl + href,
+        isServer: true
+      }));
+      newPlaylists.push({ name: folderName, source: 'server', baseUrl, tracks });
+    }
+
+    if (subFolders.length) {
+      // Scan each sub-folder
+      setStatus(`⏳ סורק ${subFolders.length} תיקיות...`, '');
+      for (const folder of subFolders) {
+        const subUrl   = baseUrl + folder;
+        const subName  = decodeURIComponent(folder.replace(/\/$/, ''));
+        try {
+          const subRes  = await fetch(subUrl, { headers: { 'Accept': 'text/html' } });
+          if (!subRes.ok) continue;
+          const subHtml = await subRes.text();
+          const subDoc  = parser.parseFromString(subHtml, 'text/html');
+          const subFiles = [...subDoc.querySelectorAll('a[href]')]
+            .map(a => a.getAttribute('href'))
+            .filter(h => h && /\.(mp3|wav|aac|m4a|ogg|flac)$/i.test(h));
+          if (!subFiles.length) continue;
+          const tracks = subFiles.map(href => ({
+            title:    decodeURIComponent(href).replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]+/, ''),
+            artist:   '',
+            art:      null,
+            duration: 0,
+            url:      subUrl + href,
+            isServer: true
+          }));
+          newPlaylists.push({ name: subName, source: 'server', baseUrl: subUrl, tracks });
+        } catch(e) { /* skip this subfolder */ }
+      }
+    }
+
+    if (!newPlaylists.length) {
+      setStatus('⚠️ לא נמצאו קבצי אודיו בכתובת שהוזנה.', 'err');
+      scanBtn.disabled = false;
+      return;
+    }
+
+    // Save folder entry
+    if (!serverFolders.find(f => f.url === baseUrl)) {
+      serverFolders.push({ name: folderName, url: baseUrl });
+      saveServerFolders();
+    }
+
+    // Merge into playlists (server source)
+    // Remove old playlists from this baseUrl then add fresh ones
+    playlists = playlists.filter(p => p.source !== 'server' || !p.baseUrl?.startsWith(baseUrl));
+    playlists.push(...newPlaylists);
+
+    setStatus(`✅ נמצאו ${newPlaylists.length} פלייליסטים, ${newPlaylists.reduce((s,p)=>s+p.tracks.length,0)} שירים`, 'ok');
+    renderServerFolders();
+  } catch(err) {
+    setStatus('❌ שגיאה: ' + (err.message || 'לא ניתן לגשת לכתובת'), 'err');
+  }
+  scanBtn.disabled = false;
 }
 
-// ── Folder Picker ─────────────────────────────────────────
+function setStatus(msg, cls) {
+  const el = $('server-scan-status');
+  el.textContent = msg;
+  el.className = 'server-scan-status' + (cls ? ' ' + cls : '');
+}
+
+function renderServerFolders() {
+  const el = $('server-playlists-list');
+
+  // Server playlists already loaded
+  const serverPls = playlists.filter(p => p.source === 'server');
+
+  if (!serverFolders.length && !serverPls.length) {
+    el.innerHTML = `<div class="audio-empty">
+      <div class="ae-icon">🌐</div>
+      <div class="ae-title">אין ספריות שמורות</div>
+      <div class="ae-sub">הזן כתובת URL של תיקיית שרת שמכילה קבצי אודיו, ולחץ "סרוק"</div>
+    </div>`;
+    return;
+  }
+
+  // Show scanned playlists grouped by server folder
+  if (serverPls.length) {
+    el.innerHTML = serverPls.map((pl, idx) => {
+      const globalIdx = playlists.indexOf(pl);
+      const dlCount   = pl.tracks.filter(t => isDownloaded(pl.name, t.title)).length;
+      return `
+      <div class="playlist-card ${currentPlaylist===globalIdx?'playing':''}" onclick="openPlaylist(${globalIdx})">
+        <div class="playlist-card-art">🎵</div>
+        <div class="playlist-card-info">
+          <div class="playlist-card-name">${pl.name}</div>
+          <div class="playlist-card-count">${pl.tracks.length} שירים${dlCount ? ` · ${dlCount} ⬇ שמורים` : ''}</div>
+        </div>
+        <span class="playlist-card-src">🌐 אתר</span>
+      </div>`;
+    }).join('') +
+    // Saved server folder entries for re-scan
+    serverFolders.map((f, fi) => `
+      <div class="server-folder-item">
+        <div class="sfi-icon">📡</div>
+        <div class="sfi-info">
+          <div class="sfi-name">${f.name}</div>
+          <div class="sfi-url">${f.url}</div>
+        </div>
+        <div class="sfi-actions">
+          <button class="sfi-btn open" onclick="reScanFolder(${fi})">סרוק מחדש</button>
+          <button class="sfi-btn del"  onclick="removeServerFolder(${fi})">מחק</button>
+        </div>
+      </div>`).join('');
+  } else {
+    el.innerHTML = serverFolders.map((f, fi) => `
+      <div class="server-folder-item">
+        <div class="sfi-icon">📡</div>
+        <div class="sfi-info">
+          <div class="sfi-name">${f.name}</div>
+          <div class="sfi-url">${f.url}</div>
+        </div>
+        <div class="sfi-actions">
+          <button class="sfi-btn open" onclick="reScanFolder(${fi})">סרוק</button>
+          <button class="sfi-btn del"  onclick="removeServerFolder(${fi})">מחק</button>
+        </div>
+      </div>`).join('');
+  }
+}
+
+async function reScanFolder(fi) {
+  const f = serverFolders[fi];
+  $('server-url-input').value = f.url;
+  await scanServerUrl();
+}
+
+function removeServerFolder(fi) {
+  const f = serverFolders[fi];
+  serverFolders.splice(fi, 1);
+  saveServerFolders();
+  // Remove its playlists
+  playlists = playlists.filter(p => !(p.source === 'server' && p.baseUrl === f.url));
+  renderServerFolders();
+}
+
+// ════════════════════════════════════════════════════════════
+//  LOCAL SOURCE
+// ════════════════════════════════════════════════════════════
+
 async function handleFolderPick(files) {
   const fileArr = Array.from(files).filter(f =>
     /\.(mp3|wav|aac|m4a|ogg|flac)$/i.test(f.name)
   );
-  if (!fileArr.length) {
-    alert('לא נמצאו קבצי אודיו בתיקייה שנבחרה.');
-    return;
-  }
+  if (!fileArr.length) { alert('לא נמצאו קבצי אודיו.'); return; }
 
-  // Group by folder (first path segment)
   const groups = {};
   fileArr.forEach(f => {
-    const parts = (f.webkitRelativePath || f.name).split('/');
+    const parts  = (f.webkitRelativePath || f.name).split('/');
     const folder = parts.length > 1 ? parts[parts.length - 2] : 'ספרייה ראשית';
     if (!groups[folder]) groups[folder] = [];
     groups[folder].push(f);
   });
 
-  playlists = [];
-  for (const [name, files] of Object.entries(groups)) {
-    const tracks = await Promise.all(files.map(f => readTrackMeta(f)));
+  // Remove old local playlists
+  playlists = playlists.filter(p => p.source !== 'local');
+
+  for (const [name, fs] of Object.entries(groups)) {
+    const tracks = await Promise.all(fs.map(f => readTrackMeta(f)));
     tracks.sort((a,b) => a.title.localeCompare(b.title, 'he'));
-    playlists.push({ name, tracks });
+    playlists.push({ name, source: 'local', tracks });
   }
   playlists.sort((a,b) => a.name.localeCompare(b.name, 'he'));
 
-  renderPlaylists();
+  renderLocalPlaylists();
   restoreAudioState();
 }
 
 async function readTrackMeta(file) {
-  const url   = URL.createObjectURL(file);
-  const title  = file.name.replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]+/, '');
-  let artist = '', art = null, duration = 0;
-
-  // Try to get duration via Audio element
+  const url      = URL.createObjectURL(file);
+  const title    = file.name.replace(/\.[^.]+$/, '').replace(/^\d+[\s._-]+/, '');
+  let duration   = 0;
   await new Promise(resolve => {
     const a = new Audio();
-    a.preload = 'metadata';
-    a.src = url;
+    a.preload = 'metadata'; a.src = url;
     a.onloadedmetadata = () => { duration = a.duration; resolve(); };
     a.onerror = resolve;
     setTimeout(resolve, 3000);
   });
-
-  return { title, artist, art, duration, url, name: file.name };
+  return { title, artist: '', art: null, duration, url, isServer: false };
 }
 
-// ── Render Playlists ──────────────────────────────────────
-function renderPlaylists() {
-  const el = $('playlists-list');
-  if (!playlists.length) {
-    el.innerHTML = `<div class="audio-empty"><div class="ae-icon">🎵</div><div class="ae-title">אין פלייליסטים</div><div class="ae-sub">בחר תיקיית שורש עם קבצי אודיו</div></div>`;
+function renderLocalPlaylists() {
+  const el  = $('local-playlists-list');
+  const pls = playlists.filter(p => p.source === 'local');
+  if (!pls.length) {
+    el.innerHTML = '';
     return;
   }
-  el.innerHTML = playlists.map((pl, idx) => `
-    <div class="playlist-card ${currentPlaylist===idx?'playing':''}" onclick="openPlaylist(${idx})">
-      <div class="playlist-card-art">${pl.tracks[0]?.art ? `<img src="${pl.tracks[0].art}" loading="lazy">` : '🎵'}</div>
+  el.innerHTML = pls.map(pl => {
+    const globalIdx = playlists.indexOf(pl);
+    return `
+    <div class="playlist-card ${currentPlaylist===globalIdx?'playing':''}" onclick="openPlaylist(${globalIdx})">
+      <div class="playlist-card-art">🎵</div>
       <div class="playlist-card-info">
         <div class="playlist-card-name">${pl.name}</div>
         <div class="playlist-card-count">${pl.tracks.length} שירים</div>
       </div>
-      ${currentPlaylist===idx ? '<span class="playlist-card-badge">מושמע</span>' : ''}
-    </div>
-  `).join('');
+      <span class="playlist-card-src local">📱 מכשיר</span>
+    </div>`;
+  }).join('');
 }
 
-// ── Open Playlist ─────────────────────────────────────────
-function openPlaylist(idx) {
+// ════════════════════════════════════════════════════════════
+//  DOWNLOAD / OFFLINE CACHE  (IndexedDB)
+// ════════════════════════════════════════════════════════════
+
+const DB_NAME    = 'AudioOfflineDB';
+const DB_STORE   = 'tracks';
+let   offlineDB  = null;
+
+async function openDB() {
+  if (offlineDB) return offlineDB;
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(DB_STORE);
+    req.onsuccess       = e => { offlineDB = e.target.result; res(offlineDB); };
+    req.onerror         = () => rej(req.error);
+  });
+}
+
+function dlKey(playlistName, trackTitle) {
+  return `${playlistName}||${trackTitle}`;
+}
+
+async function isDownloaded(playlistName, trackTitle) {
+  try {
+    const db  = await openDB();
+    const tx  = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get(dlKey(playlistName, trackTitle));
+    return await new Promise(res => { req.onsuccess = () => res(!!req.result); req.onerror = () => res(false); });
+  } catch(e) { return false; }
+}
+
+async function getDownloaded(playlistName, trackTitle) {
+  try {
+    const db  = await openDB();
+    const tx  = db.transaction(DB_STORE, 'readonly');
+    const req = tx.objectStore(DB_STORE).get(dlKey(playlistName, trackTitle));
+    return await new Promise(res => { req.onsuccess = () => res(req.result || null); req.onerror = () => res(null); });
+  } catch(e) { return null; }
+}
+
+async function storeDownloaded(playlistName, trackTitle, blob) {
+  try {
+    const db  = await openDB();
+    const tx  = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).put(blob, dlKey(playlistName, trackTitle));
+    return new Promise(res => { tx.oncomplete = () => res(true); tx.onerror = () => res(false); });
+  } catch(e) { return false; }
+}
+
+async function deleteDownloaded(playlistName, trackTitle) {
+  try {
+    const db  = await openDB();
+    const tx  = db.transaction(DB_STORE, 'readwrite');
+    tx.objectStore(DB_STORE).delete(dlKey(playlistName, trackTitle));
+  } catch(e) {}
+}
+
+// ── Download single track ─────────────────────────────────
+async function downloadTrack(plIdx, trIdx, event) {
+  event.stopPropagation();
+  const pl    = playlists[plIdx];
+  const track = pl.tracks[trIdx];
+  const key   = dlKey(pl.name, track.title);
+  const btn   = event.currentTarget;
+
+  if (await isDownloaded(pl.name, track.title)) {
+    // Already downloaded — offer to remove
+    if (confirm(`מחק את "${track.title}" מהאחסון המקומי?`)) {
+      await deleteDownloaded(pl.name, track.title);
+      btn.textContent = '⬇';
+      btn.classList.remove('downloaded');
+      showToast('🗑 הוסר מהאחסון');
+    }
+    return;
+  }
+
+  btn.textContent = '⏳';
+  btn.disabled    = true;
+
+  try {
+    const res  = await fetch(track.url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    await storeDownloaded(pl.name, track.title, blob);
+    btn.textContent = '✅';
+    btn.classList.add('downloaded');
+    btn.disabled    = false;
+    showToast(`✅ "${track.title}" נשמר`);
+    // Update track URL to local blob for future playback
+    track.offlineBlob = blob;
+  } catch(err) {
+    btn.textContent = '⬇';
+    btn.disabled    = false;
+    showToast('❌ שגיאה בהורדה');
+  }
+}
+
+// ── Download entire playlist ──────────────────────────────
+async function downloadPlaylist() {
+  if (currentPlaylist < 0) return;
+  const pl  = playlists[currentPlaylist];
+  const btn = $('tl-download-all');
+  btn.textContent = '⏳ מוריד...';
+  btn.disabled    = true;
+
+  let done = 0;
+  for (let i = 0; i < pl.tracks.length; i++) {
+    const t = pl.tracks[i];
+    if (await isDownloaded(pl.name, t.title)) { done++; continue; }
+    try {
+      const res  = await fetch(t.url);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      await storeDownloaded(pl.name, t.title, blob);
+      t.offlineBlob = blob;
+      done++;
+      btn.textContent = `⏳ ${done}/${pl.tracks.length}`;
+      // Update dl button in list
+      const dlBtn = document.getElementById(`dl-btn-${i}`);
+      if (dlBtn) { dlBtn.textContent = '✅'; dlBtn.classList.add('downloaded'); }
+    } catch(e) {}
+  }
+
+  btn.textContent = `✅ הורד (${done})`;
+  btn.disabled    = false;
+  showToast(`✅ ${done} שירים נשמרו להפעלה אופליין`);
+}
+
+// ── Toast helper ──────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el = $('dl-toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ════════════════════════════════════════════════════════════
+//  OPEN PLAYLIST / RENDER TRACKS
+// ════════════════════════════════════════════════════════════
+
+async function openPlaylist(idx) {
   currentPlaylist = idx;
   const pl = playlists[idx];
   $('pl-name').textContent  = pl.name;
   $('pl-count').textContent = `${pl.tracks.length} שירים`;
   $('pl-art').innerHTML     = '🎵';
 
+  const badge = $('pl-source-badge');
+  badge.textContent = pl.source === 'server' ? '🌐 אתר' : '📱 מכשיר';
+
+  // Show download-all only for server playlists
+  const dlAll = $('tl-download-all');
+  dlAll.style.display = pl.source === 'server' ? '' : 'none';
+  dlAll.textContent   = '⬇ הורד הכל';
+  dlAll.disabled      = false;
+
+  // Build track rows — check offline status
+  const dlStatuses = await Promise.all(pl.tracks.map(t => isDownloaded(pl.name, t.title)));
+
   const wrap = document.createElement('div');
   wrap.className = 'track-rows-wrap';
-  wrap.innerHTML = pl.tracks.map((t, ti) => `
-    <div class="track-row ${currentTrack===ti && currentPlaylist===idx ? 'active' : ''}" id="track-row-${ti}" onclick="playTrack(${ti})">
-      <div class="track-num">${currentTrack===ti && currentPlaylist===idx ? '' : ti+1}</div>
+  wrap.innerHTML = pl.tracks.map((t, ti) => {
+    const isActive = currentTrack===ti && currentPlaylist===idx;
+    const isDl     = dlStatuses[ti];
+    return `
+    <div class="track-row ${isActive ? 'active' : ''}" id="track-row-${ti}" onclick="playTrack(${ti})">
+      <div class="track-num">${isActive ? '' : ti+1}</div>
       <div class="track-playing-indicator">
-        ${currentTrack===ti && currentPlaylist===idx && !audioEl.paused
-          ? '<span class="track-wave"><span></span><span></span><span></span></span>' : ''}
+        ${isActive && !audioEl.paused ? '<span class="track-wave"><span></span><span></span><span></span></span>' : ''}
       </div>
-      <div class="track-art">${t.art ? `<img src="${t.art}" loading="lazy">` : '♪'}</div>
+      <div class="track-art">♪</div>
       <div class="track-info">
         <div class="track-title">${t.title}</div>
         ${t.artist ? `<div class="track-artist">${t.artist}</div>` : ''}
       </div>
       <div class="track-dur">${fmtTime(t.duration)}</div>
-    </div>
-  `).join('');
+      ${pl.source === 'server' ? `
+        <button id="dl-btn-${ti}" class="track-dl-btn ${isDl?'downloaded':''}"
+          onclick="downloadTrack(${idx},${ti},event)"
+          title="${isDl?'שמור — לחץ למחיקה':'הורד לשמירה אופליין'}">
+          ${isDl ? '✅' : '⬇'}
+        </button>` : ''}
+    </div>`;
+  }).join('');
 
   $('tracklist-items').innerHTML = '';
   $('tracklist-items').appendChild(wrap);
@@ -1401,16 +1913,32 @@ function openPlaylist(idx) {
 function showPlaylists() {
   $('audio-tracklist').classList.remove('active');
   $('audio-playlists').classList.add('active');
-  renderPlaylists();
+  if (audioSource === 'server') renderServerFolders();
+  else renderLocalPlaylists();
 }
 
-// ── Playback ──────────────────────────────────────────────
-function playTrack(idx, seekTo = 0) {
-  if (currentPlaylist < 0) return;
-  currentTrack = idx;
-  const track = playlists[currentPlaylist].tracks[idx];
+// ════════════════════════════════════════════════════════════
+//  PLAYBACK
+// ════════════════════════════════════════════════════════════
 
-  audioEl.src = track.url;
+async function playTrack(idx, seekTo) {
+  if (currentPlaylist < 0) return;
+  currentTrack     = idx;
+  seekTo           = seekTo || 0;
+  const pl         = playlists[currentPlaylist];
+  const track      = pl.tracks[idx];
+
+  // For server tracks: prefer offline blob, fall back to URL
+  let src = track.url;
+  if (pl.source === 'server') {
+    const blob = track.offlineBlob || await getDownloaded(pl.name, track.title);
+    if (blob) {
+      src = URL.createObjectURL(blob);
+      track.offlineBlob = blob; // cache for next time
+    }
+  }
+
+  audioEl.src = src;
   audioEl.currentTime = seekTo;
   audioEl.play().catch(()=>{});
 
@@ -1425,17 +1953,15 @@ function playTrack(idx, seekTo = 0) {
 
 function togglePlay() {
   if (!audioEl.src) return;
-  if (audioEl.paused) { audioEl.play(); }
-  else                { audioEl.pause(); saveAudioState(); }
+  if (audioEl.paused) audioEl.play();
+  else { audioEl.pause(); saveAudioState(); }
 }
 
 function stopAudio() {
-  audioEl.pause();
-  audioEl.currentTime = 0;
+  audioEl.pause(); audioEl.currentTime = 0;
   $('fp-play-btn').textContent = '▶';
   $('sp-play-btn').textContent = '▶';
-  saveAudioState();
-  releaseWakeLock();
+  saveAudioState(); releaseWakeLock();
 }
 
 function prevTrack() {
@@ -1457,19 +1983,14 @@ function skipForward() { audioEl.currentTime = Math.min(audioEl.duration || 0, a
 // ── UI Updates ────────────────────────────────────────────
 function updatePlayerUI(track) {
   const title  = track.title;
-  const artist = track.artist || 'אמן לא ידוע';
+  const artist = track.artist || '';
   const artContent = track.art ? `<img src="${track.art}">` : '🎵';
-
-  // Sticky bar
-  $('sp-title').textContent  = title;
-  $('sp-artist').textContent = artist;
-  $('sp-art').innerHTML      = artContent;
-
-  // Full player
-  $('fp-title').textContent  = title;
-  $('fp-artist').textContent = artist;
-  $('fp-art').innerHTML      = artContent;
-
+  $('sp-title').textContent   = title;
+  $('sp-artist').textContent  = artist || 'לחץ לפתיחת הנגן';
+  $('sp-art').innerHTML       = artContent;
+  $('fp-title').textContent   = title;
+  $('fp-artist').textContent  = artist || '—';
+  $('fp-art').innerHTML       = artContent;
   $('fp-play-btn').textContent = '⏸';
   $('sp-play-btn').textContent = '⏸';
 }
@@ -1490,28 +2011,22 @@ function updateSeekBar() {
   if (!seek || isSeeking) return;
   const pct = audioEl.duration ? (audioEl.currentTime / audioEl.duration) * 100 : 0;
   seek.value = pct;
-  // gradient fill
   seek.style.background = `linear-gradient(to left, var(--border) ${100-pct}%, var(--navy2) ${100-pct}%)`;
   $('fp-current').textContent  = fmtTime(audioEl.currentTime);
   $('fp-duration').textContent = fmtTime(audioEl.duration || 0);
 }
 
-// ── Full Player Modal ─────────────────────────────────────
-function openFullPlayer() {
-  $('full-player').classList.remove('hidden');
-}
-function closeFullPlayer() {
-  $('full-player').classList.add('hidden');
-}
+// ── Full Player ───────────────────────────────────────────
+function openFullPlayer()  { $('full-player').classList.remove('hidden'); }
+function closeFullPlayer() { $('full-player').classList.add('hidden'); }
 
-// ── Seek events ───────────────────────────────────────────
+// ── Seek ──────────────────────────────────────────────────
 const seekInput = document.getElementById('fp-seek');
 if (seekInput) {
-  seekInput.addEventListener('mousedown', () => isSeeking = true);
+  seekInput.addEventListener('mousedown',  () => isSeeking = true);
   seekInput.addEventListener('touchstart', () => isSeeking = true, {passive:true});
   seekInput.addEventListener('input', e => {
-    const pct = e.target.value;
-    $('fp-current').textContent = fmtTime((pct/100) * (audioEl.duration||0));
+    $('fp-current').textContent = fmtTime((e.target.value/100) * (audioEl.duration||0));
   });
   seekInput.addEventListener('change', e => {
     audioEl.currentTime = (e.target.value / 100) * (audioEl.duration || 0);
@@ -1522,65 +2037,46 @@ if (seekInput) {
 // ── Volume ────────────────────────────────────────────────
 const volInput = document.getElementById('fp-volume');
 if (volInput) {
-  // restore saved volume
   const saved = loadAudioState();
   if (saved?.volume != null) { audioEl.volume = saved.volume; volInput.value = saved.volume; }
-  volInput.addEventListener('input', e => {
-    audioEl.volume = e.target.value;
-    saveAudioState();
-  });
+  volInput.addEventListener('input', e => { audioEl.volume = e.target.value; saveAudioState(); });
 }
 
-// ── Audio element events ──────────────────────────────────
+// ── Audio events ──────────────────────────────────────────
 audioEl.addEventListener('timeupdate', () => {
   updateSeekBar();
   if (Math.floor(audioEl.currentTime) % 5 === 0) saveAudioState();
 });
-
 audioEl.addEventListener('play', () => {
-  $('fp-play-btn').textContent = '⏸';
-  $('sp-play-btn').textContent = '⏸';
-  updateTracklistHighlight();
-  acquireWakeLock();
+  $('fp-play-btn').textContent = '⏸'; $('sp-play-btn').textContent = '⏸';
+  updateTracklistHighlight(); acquireWakeLock();
 });
-
 audioEl.addEventListener('pause', () => {
-  $('fp-play-btn').textContent = '▶';
-  $('sp-play-btn').textContent = '▶';
-  updateTracklistHighlight();
-  releaseWakeLock();
-  saveAudioState();
+  $('fp-play-btn').textContent = '▶'; $('sp-play-btn').textContent = '▶';
+  updateTracklistHighlight(); releaseWakeLock(); saveAudioState();
 });
+audioEl.addEventListener('ended', nextTrack);
+audioEl.addEventListener('error', () => console.warn('Audio error:', audioEl.src));
 
-audioEl.addEventListener('ended', () => {
-  nextTrack();
-});
-
-audioEl.addEventListener('error', () => {
-  console.warn('Audio error on:', audioEl.src);
-});
-
-// ── Media Session API ─────────────────────────────────────
+// ── Media Session ─────────────────────────────────────────
 function setupMediaSession(track) {
   if (!('mediaSession' in navigator)) return;
   navigator.mediaSession.metadata = new MediaMetadata({
-    title:  track.title,
-    artist: track.artist || '',
+    title: track.title, artist: track.artist || '',
     artwork: track.art ? [{ src: track.art, sizes:'512x512', type:'image/jpeg' }] : []
   });
-  navigator.mediaSession.setActionHandler('play',         () => audioEl.play());
-  navigator.mediaSession.setActionHandler('pause',        () => audioEl.pause());
-  navigator.mediaSession.setActionHandler('nexttrack',    () => nextTrack());
-  navigator.mediaSession.setActionHandler('previoustrack',() => prevTrack());
-  navigator.mediaSession.setActionHandler('seekbackward', () => skipBack());
-  navigator.mediaSession.setActionHandler('seekforward',  () => skipForward());
+  navigator.mediaSession.setActionHandler('play',          () => audioEl.play());
+  navigator.mediaSession.setActionHandler('pause',         () => audioEl.pause());
+  navigator.mediaSession.setActionHandler('nexttrack',     nextTrack);
+  navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
+  navigator.mediaSession.setActionHandler('seekbackward',  skipBack);
+  navigator.mediaSession.setActionHandler('seekforward',   skipForward);
 }
 
 // ── Wake Lock ─────────────────────────────────────────────
 async function acquireWakeLock() {
-  if (!('wakeLock' in navigator)) return;
+  if (!('wakeLock' in navigator) || wakeLock) return;
   try {
-    if (wakeLock) return;
     wakeLock = await navigator.wakeLock.request('screen');
     wakeLock.addEventListener('release', () => { wakeLock = null; });
   } catch(e) {}
@@ -1592,7 +2088,24 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && !audioEl.paused) acquireWakeLock();
 });
 
-// ── Restore state ─────────────────────────────────────────
+// ── Persistence ───────────────────────────────────────────
+function saveAudioState() {
+  if (currentPlaylist < 0 || currentTrack < 0) return;
+  const pl = playlists[currentPlaylist];
+  try {
+    localStorage.setItem(AUDIO_STORAGE_KEY, JSON.stringify({
+      playlistName: pl?.name,
+      trackTitle:   pl?.tracks[currentTrack]?.title,
+      currentTime:  audioEl.currentTime,
+      volume:       audioEl.volume
+    }));
+  } catch(e){}
+}
+
+function loadAudioState() {
+  try { return JSON.parse(localStorage.getItem(AUDIO_STORAGE_KEY) || 'null'); } catch(e) { return null; }
+}
+
 function restoreAudioState() {
   const state = loadAudioState();
   if (!state || !playlists.length) return;
@@ -1600,11 +2113,9 @@ function restoreAudioState() {
   if (plIdx < 0) return;
   const trIdx = playlists[plIdx].tracks.findIndex(t => t.title === state.trackTitle);
   if (trIdx < 0) return;
-  currentPlaylist = plIdx;
-  currentTrack    = trIdx;
-  const track     = playlists[plIdx].tracks[trIdx];
-  // Load audio but don't autoplay
-  audioEl.src     = track.url;
+  currentPlaylist = plIdx; currentTrack = trIdx;
+  const track = playlists[plIdx].tracks[trIdx];
+  audioEl.src = track.url;
   audioEl.currentTime = state.currentTime || 0;
   if (state.volume != null) audioEl.volume = state.volume;
   updatePlayerUI(track);
@@ -1617,8 +2128,7 @@ function restoreAudioState() {
 function fmtTime(s) {
   if (!s || isNaN(s)) return '0:00';
   const m = Math.floor(s / 60);
-  const sec = String(Math.floor(s % 60)).padStart(2, '0');
-  return `${m}:${sec}`;
+  return `${m}:${String(Math.floor(s % 60)).padStart(2,'0')}`;
 }
 
 if ('serviceWorker' in navigator) {
