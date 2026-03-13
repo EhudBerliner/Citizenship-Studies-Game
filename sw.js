@@ -1,4 +1,4 @@
-const CACHE_NAME = 'civics-audio-v2';
+const CACHE_NAME = 'civics-audio-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,8 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache =>
       cache.addAll(CORE_ASSETS).catch(() => {})
-    ).then(() => self.skipWaiting())
+    )
+    // Don't skipWaiting automatically — wait for user to approve update
   );
 });
 
@@ -21,6 +22,11 @@ self.addEventListener('activate', event => {
       Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     ).then(() => self.clients.claim())
   );
+});
+
+// Allow the page to trigger activation explicitly
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('fetch', event => {
