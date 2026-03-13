@@ -659,9 +659,19 @@
     </div>
     <div class="sp-controls">
       <button class="sp-btn" onclick="nextTrack()" title="הבא">⏭</button>
-      <button class="sp-btn sp-skip-sm" onclick="skipForward()" title="קדימה 15 שניות">▶<span class="sp-skip-lbl">15</span></button>
+      <button class="sp-btn sp-skip-sm" onclick="skipForward()" title="קדימה 15 שניות">
+        <svg class="skip-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V2l4 4-4 4V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="currentColor"/>
+          <text x="12" y="14.5" text-anchor="middle" font-size="6" font-weight="700" fill="currentColor" font-family="Heebo,sans-serif">15</text>
+        </svg>
+      </button>
       <button class="sp-btn sp-play-btn" id="sp-play-btn" onclick="togglePlay()">▶</button>
-      <button class="sp-btn sp-skip-sm" onclick="skipBack()" title="אחורה 15 שניות">◀<span class="sp-skip-lbl">15</span></button>
+      <button class="sp-btn sp-skip-sm" onclick="skipBack()" title="אחורה 15 שניות">
+        <svg class="skip-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="currentColor"/>
+          <text x="12" y="14.5" text-anchor="middle" font-size="6" font-weight="700" fill="currentColor" font-family="Heebo,sans-serif">15</text>
+        </svg>
+      </button>
       <button class="sp-btn" onclick="prevTrack()" title="הקודם">⏮</button>
     </div>
   </div>
@@ -688,11 +698,17 @@
     <div class="fp-main-controls">
       <button class="fp-btn fp-next-btn" onclick="nextTrack()" title="הבא">⏭</button>
       <button class="fp-btn fp-skip-btn" onclick="skipForward()" title="קדימה 15 שניות">
-        <span class="fp-skip-icon">▶</span><span class="fp-skip-label">15</span>
+        <svg class="skip-svg-fp" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V2l4 4-4 4V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="currentColor"/>
+          <text x="12" y="14.5" text-anchor="middle" font-size="6" font-weight="700" fill="currentColor" font-family="Heebo,sans-serif">15</text>
+        </svg>
       </button>
       <button class="fp-btn fp-play-main" id="fp-play-btn" onclick="togglePlay()">▶</button>
       <button class="fp-btn fp-skip-btn" onclick="skipBack()" title="אחורה 15 שניות">
-        <span class="fp-skip-icon">◀</span><span class="fp-skip-label">15</span>
+        <svg class="skip-svg-fp" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="currentColor"/>
+          <text x="12" y="14.5" text-anchor="middle" font-size="6" font-weight="700" fill="currentColor" font-family="Heebo,sans-serif">15</text>
+        </svg>
       </button>
       <button class="fp-btn fp-prev-btn" onclick="prevTrack()" title="הקודם">⏮</button>
     </div>
@@ -861,11 +877,12 @@
 }
 .sp-btn:hover { background: rgba(255,255,255,.15); }
 .sp-skip-sm {
-  font-size:.95rem !important; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:0; line-height:1;
   padding:2px 4px !important;
 }
-.sp-skip-lbl { font-size:.52rem; font-weight:700; opacity:.7; line-height:1; }
+.skip-svg {
+  width: 28px; height: 28px; display: block;
+}
+
 .sp-play-btn {
   background: var(--gold); color: var(--navy) !important;
   border-radius:50% !important; width:36px; height:36px;
@@ -941,11 +958,11 @@
 }
 .fp-play-main:hover { background: var(--navy2) !important; transform: scale(1.05) !important; }
 .fp-skip-btn {
-  position:relative; font-size:1.3rem !important;
-  flex-direction:column; gap:0; height:52px; width:52px;
+  position:relative; height:52px; width:52px;
 }
-.fp-skip-icon { font-size:1.5rem; line-height:1; }
-.fp-skip-label { font-size:.6rem; font-weight:700; color:var(--muted); line-height:1; }
+.skip-svg-fp {
+  width: 38px; height: 38px; display: block;
+}
 .fp-prev-btn, .fp-next-btn { font-size:1.5rem !important; }
 
 .fp-volume-wrap {
@@ -1459,13 +1476,14 @@ async function loadDirHandle() {
 }
 
 async function loadFilesFromHandle(handle) {
+  const rootName = handle.name;
   const groups = {};
   async function scanDir(dirHandle, path) {
     for await (const [name, entry] of dirHandle.entries()) {
       if (entry.kind === 'directory') {
         await scanDir(entry, path ? path + '/' + name : name);
       } else if (/\.(mp3|wav|aac|m4a|ogg|flac)$/i.test(name)) {
-        const folder = path || 'ספרייה ראשית';
+        const folder = path || rootName;
         if (!groups[folder]) groups[folder] = [];
         groups[folder].push({ name, handle: entry });
       }
