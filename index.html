@@ -1229,23 +1229,58 @@ body.dark .loaded-folder-name { color:var(--text); }
 
 /* ── Toast system ─────────────────────────────────── */
 #toast-container {
-  position:fixed; bottom:90px; left:50%; transform:translateX(-50%);
-  display:flex; flex-direction:column; align-items:center; gap:8px;
-  z-index:5000; pointer-events:none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 8px;
+  z-index: 9500;
+  pointer-events: none;
+  width: min(92vw, 440px);
 }
 .toast {
-  padding:10px 20px; border-radius:20px;
-  font-size:.85rem; font-weight:600; color:white;
-  opacity:0; transform:translateY(12px);
-  transition:opacity .25s, transform .25s;
-  white-space:nowrap; max-width:90vw; text-align:center;
-  pointer-events:none;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: .9rem;
+  font-weight: 600;
+  color: white;
+  line-height: 1.45;
+  font-family: 'Heebo', sans-serif;
+  box-shadow: 0 6px 20px rgba(0,0,0,.22);
+  pointer-events: auto;
+  cursor: default;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .3s ease, transform .3s ease;
+  will-change: opacity, transform;
 }
-.toast.show   { opacity:1; transform:translateY(0); }
-.toast.info   { background: var(--navy); }
-.toast.ok     { background: #15803d; }
-.toast.warn   { background: #d97706; }
-.toast.err    { background: #dc2626; }
+.toast.show  { opacity: 1; transform: translateY(0); }
+.toast.hide  { opacity: 0; transform: translateY(8px); transition: opacity .5s ease, transform .5s ease; }
+.toast-icon  { font-size: 1rem; flex-shrink: 0; line-height: 1.45; }
+.toast-body  { flex: 1; min-width: 0; word-break: break-word; }
+.toast-close {
+  background: rgba(255,255,255,.2); border: none; color: white;
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: .65rem; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px; transition: background .15s; font-family: sans-serif;
+}
+.toast-close:hover { background: rgba(255,255,255,.35); }
+
+/* Type colours per spec */
+.toast.ok   { background: #28a745; }
+.toast.err  { background: #dc3545; }
+.toast.err .toast-body { font-weight: 700; }
+.toast.warn { background: #d97706; }
+.toast.info { background: #4a90e2; }
+
 
 /* ── Network offline banner ───────────────────────── */
 #network-banner {
@@ -1432,7 +1467,14 @@ let favTerms    = new Set(JSON.parse(localStorage.getItem('civ_favs') || '[]'));
 let favOnly     = false;
 let allExpanded = false;   // tracks toggle-all state
 
-function saveFavs() { localStorage.setItem('civ_favs', JSON.stringify([...favTerms])); }
+function saveFavs() {
+  try {
+    localStorage.setItem('civ_favs', JSON.stringify([...favTerms]));
+  } catch(e) {
+    if (e.name === 'QuotaExceededError') showToast(MSG.STORAGE_FULL);
+    else showToast(MSG.GENERAL_ERROR(e.message || 'שגיאת שמירה'), 'err', 7000);
+  }
+}
 
 function initDict() {
   renderDict(termsData);
@@ -1897,7 +1939,7 @@ async function loadFilesFromHandle(handle, additive = false) {
   try {
     await scanDir(handle, '');
   } catch(e) {
-    showToast('⚠️ שגיאה בקריאת התיקייה', 'warn');
+    showToast(MSG.GENERAL_ERROR('שגיאה בקריאת התיקייה'), 'err', 7000);
     return;
   }
 
@@ -1981,9 +2023,9 @@ async function restoreSavedFolders() {
     try {
       const perm = await handle.requestPermission({ mode: 'read' });
       if (perm === 'granted') await loadFilesFromHandle(handle, true);
-      else showToast(`⚠️ גישה ל"${handle.name}" נדחתה`, 'warn');
+      else showToast(MSG.GENERAL_ERROR(`גישה ל"${handle.name}" נדחתה`));
     } catch(e) {
-      showToast(`⚠️ שגיאה בטעינת "${handle.name}"`, 'warn');
+      showToast(MSG.GENERAL_ERROR(`שגיאה בטעינת "${handle.name}"`));
     }
   }
 }
@@ -2083,21 +2125,95 @@ function renderLocalPlaylists() {
 // ════════════════════════════════════════════════════════════
 const APP_VERSION = '1.2';
 
-// ── Toast system ─────────────────────────────────────────────
-function showToast(msg, type = 'info', duration = 2800) {
-  // legacy: also keep #dl-toast logic for backward compat if element exists
+// ── Message catalogue (6.3.1) ──────────────────────────────
+const MSG = {
+  SW_REG_SUCCESS : { text: '✅ האפליקציה מוכנה לעבודה במצב אופליין',   type: 'ok',   duration: 3500 },
+  APP_REMOVED    : { text: '✅ כל נתוני האפליקציה הוסרו',               type: 'ok',   duration: 3500 },
+  CACHE_CLEARED  : { text: '✅ המטמון נוקה בהצלחה',                     type: 'ok',   duration: 3500 },
+  GAME_SAVED     : { text: '✅ ההתקדמות נשמרה',                          type: 'ok',   duration: 3500 },
+  SW_FAILED      : { text: '⚠️ כשל ברישום מערכת האופליין',              type: 'err',  duration: 7000 },
+  STORAGE_FULL   : { text: '⚠️ שגיאה: זיכרון הדפדפן מלא',              type: 'err',  duration: 7000 },
+  UPDATE_AVAIL   : (v) => ({ text: `ℹ️ גרסה חדשה זמינה (v${v})`,       type: 'info', duration: 3500 }),
+  OFFLINE_MODE   : { text: 'ℹ️ אתה עובד כעת במצב לא מקוון',            type: 'info', duration: 3500 },
+  GENERAL_ERROR  : (msg) => ({ text: `⚠️ שגיאה: ${msg}`,               type: 'err',  duration: 7000 }),
+};
+
+// ── Toast engine (6.3.2 / 6.3.3 / 6.3.4) ─────────────────
+const _toastActive = new Map(); // type → element (for same-type replace)
+
+function showToast(msgOrId, type = 'info', duration = null) {
+  // Accept MSG catalogue entry or raw string
+  let text, resolvedType, resolvedDuration;
+  if (typeof msgOrId === 'object' && msgOrId !== null && 'text' in msgOrId) {
+    text             = msgOrId.text;
+    resolvedType     = msgOrId.type     || type;
+    resolvedDuration = msgOrId.duration || duration;
+  } else {
+    text             = msgOrId;
+    resolvedType     = type;
+    resolvedDuration = duration;
+  }
+
+  // Default durations: err=7s, else=3.5s (spec 6.3.4)
+  if (!resolvedDuration) {
+    resolvedDuration = resolvedType === 'err' ? 7000 : 3500;
+  }
+
   const container = document.getElementById('toast-container');
   if (!container) return;
+
+  // Same-type replacement (spec 6.3.4 stacking rule)
+  if (_toastActive.has(resolvedType)) {
+    const old = _toastActive.get(resolvedType);
+    old.classList.add('hide');
+    setTimeout(() => old.remove(), 500);
+    _toastActive.delete(resolvedType);
+  }
+
+  // Build element with icon + body + close (spec 6.3.2)
   const el = document.createElement('div');
-  el.className = `toast ${type}`;
-  el.textContent = msg;
+  el.className  = `toast ${resolvedType}`;
+  el.setAttribute('role', 'alert');
+  el.setAttribute('aria-live', 'assertive');
+  el.setAttribute('aria-atomic', 'true');
+
+  const icon  = text.match(/^[\u{1F300}-\u{1FFFF}\u2600-\u27BF⚠️✅ℹ️📡]/u)?.[0] || '';
+  const body  = icon ? text.slice(icon.length).trim() : text;
+
+  el.innerHTML = `
+    <span class="toast-icon" aria-hidden="true">${icon}</span>
+    <span class="toast-body">${body}</span>
+    <button class="toast-close" aria-label="סגור הודעה">✕</button>
+  `;
+  el.querySelector('.toast-close').addEventListener('click', () => dismissToast(el, resolvedType));
+
   container.appendChild(el);
-  requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
-  setTimeout(() => {
-    el.classList.remove('show');
-    setTimeout(() => el.remove(), 300);
-  }, duration);
+  _toastActive.set(resolvedType, el);
+
+  // Slide-up + fade-in (spec 6.3.3 animation)
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
+
+  const timer = setTimeout(() => dismissToast(el, resolvedType), resolvedDuration);
+  el._timer = timer;
 }
+
+function dismissToast(el, type) {
+  clearTimeout(el._timer);
+  el.classList.add('hide');
+  el.classList.remove('show');
+  if (_toastActive.get(type) === el) _toastActive.delete(type);
+  setTimeout(() => el.remove(), 500);
+}
+
+// Convenience wrappers
+const toast = {
+  ok:   (msg, dur) => showToast(msg, 'ok',   dur),
+  err:  (msg, dur) => showToast(msg, 'err',  dur),
+  warn: (msg, dur) => showToast(msg, 'warn', dur),
+  info: (msg, dur) => showToast(msg, 'info', dur),
+  msg:  (id)       => showToast(typeof id === 'function' ? id() : id),
+};
+
 
 // ── Dark mode ─────────────────────────────────────────────────
 function initDarkMode() {
@@ -2122,6 +2238,7 @@ function initNetworkMonitoring() {
       showToast('✅ חיבור לאינטרנט שוחזר', 'ok');
     } else {
       banner.classList.add('show');
+      showToast(MSG.OFFLINE_MODE);
     }
   }
   window.addEventListener('online',  update);
@@ -2132,7 +2249,7 @@ function initNetworkMonitoring() {
   const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (conn) {
     const slow = conn.saveData || ['slow-2g','2g'].includes(conn.effectiveType);
-    if (slow) showToast('⚠️ חיבור איטי — חלק מהתוכן עשוי לא להיטען', 'warn', 4000);
+    if (slow) showToast('⚠️ חיבור איטי — חלק מהתוכן עשוי לא להיטען', 'warn', 5000);
   }
 }
 initNetworkMonitoring();
@@ -2146,17 +2263,20 @@ function initVersionManagement() {
   const prev = localStorage.getItem('civ_appVersion');
   if (prev && prev !== APP_VERSION) {
     if ('caches' in window) caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
-    showToast(`✨ עודכן לגרסה ${APP_VERSION}`, 'ok', 3500);
+    showToast(`✨ עודכן לגרסה ${APP_VERSION}`, 'ok', 4000);
   }
   localStorage.setItem('civ_appVersion', APP_VERSION);
 
-  // Poll version.json every 60s
+  // Poll version.json every 60s (SW polling at 300s handled separately)
   async function checkRemoteVersion() {
     try {
       const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-store' });
       if (!res.ok) return;
       const { version } = await res.json();
-      if (version && version !== APP_VERSION) showUpdatePrompt(version);
+      if (version && version !== APP_VERSION) {
+        showUpdatePrompt(version);
+        showToast(MSG.UPDATE_AVAIL(version));
+      }
     } catch(e) {}
   }
   checkRemoteVersion();
@@ -2199,7 +2319,7 @@ window.addEventListener('beforeinstallprompt', e => {
 window.addEventListener('appinstalled', () => {
   document.getElementById('install-banner').classList.remove('show');
   localStorage.setItem('civ_appInstalled', '1');
-  showToast('✅ האפליקציה הותקנה בהצלחה!', 'ok', 3500);
+  showToast('✅ האפליקציה הותקנה בהצלחה!', 'ok', 4000);
 });
 
 function triggerInstall() {
@@ -2300,10 +2420,13 @@ async function doReset() {
   closeResetModal();
 
   if (delCache) {
-    setTimeout(() => location.reload(true), 300);
+    // Spec 6.3.4: 1500ms before reload to let user read feedback
+    showToast(MSG.APP_REMOVED);
+    hapticSuccess();
+    setTimeout(() => location.reload(true), 1500);
   } else {
     hapticSuccess();
-    showToast('✅ הנתונים נמחקו בהצלחה', 'ok');
+    showToast(MSG.GAME_SAVED);
   }
 }
 
@@ -2311,6 +2434,10 @@ async function doReset() {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(reg => {
     _swReg = reg;
+    // MSG_SW_REG_SUCCESS — show only on first registration (no controller yet)
+    if (!navigator.serviceWorker.controller) {
+      showToast(MSG.SW_REG_SUCCESS);
+    }
     reg.onupdatefound = () => {
       const w = reg.installing;
       w.onstatechange = () => {
@@ -2325,6 +2452,10 @@ if ('serviceWorker' in navigator) {
 
     // Poll for SW updates every 60s
     setInterval(() => reg.update().catch(() => {}), 60000);
+  }).catch(err => {
+    // MSG_SW_FAILED
+    showToast(MSG.SW_FAILED);
+    console.error('[SW] Registration failed:', err);
   });
 
   // When SW activates (after SKIP_WAITING), reload
