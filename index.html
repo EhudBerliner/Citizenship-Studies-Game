@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1152/1152912.png">
-  <title>אזרחות — מילון וחידון v1.5</title>
+  <title>אזרחות — מילון וחידון v1.6</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -769,7 +769,7 @@
   <div class="header-top">
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="hamburger-btn" onclick="openSettings()" aria-label="הגדרות">☰</button>
-      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.5</button></div>
+      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.6</button></div>
     </div>
     <button id="home-btn" onclick="goHome()">← חזרה לתפריט</button>
   </div>
@@ -1221,13 +1221,13 @@
       <!-- LOCAL panel — always visible -->
       <div id="audio-local-panel">
         <div id="local-restore-prompt" style="display:none">
-          <div class="audio-folder-card restore-card">
-            <div class="audio-folder-icon">📂</div>
+          <div class="audio-folder-card restore-card" style="opacity:.75">
+            <div class="audio-folder-icon">🔄</div>
             <div class="audio-folder-text">
-              <div class="audio-folder-title" id="restore-folder-name">תיקיות שמורות</div>
-              <div class="audio-folder-sub">לחץ לטעינה מחדש של התיקיות השמורות</div>
+              <div class="audio-folder-title" id="restore-folder-name">מאשר גישה לתיקיות...</div>
+              <div class="audio-folder-sub">עבור לטאב הנגן לטעינה אוטומטית</div>
             </div>
-            <button class="audio-open-btn" onclick="restoreSavedFolders()">טען</button>
+            <button class="audio-open-btn" onclick="restoreSavedFolders()">טען ידנית</button>
           </div>
         </div>
         <div class="audio-folder-card">
@@ -2433,39 +2433,68 @@ async function pickLocalFolder() {
   }
 }
 
+// Pending handles awaiting a user-gesture permission request
+let _pendingHandles = [];
+
 async function tryRestoreLocalFolder() {
   const handles = await loadDirHandles();
   if (!handles.length) return;
 
-  const grantedHandles = [];
-  const pendingHandles = [];
-
   for (const handle of handles) {
     try {
       const perm = await handle.queryPermission({ mode: 'read' });
-      if (perm === 'granted') grantedHandles.push(handle);
-      else pendingHandles.push(handle);
+      if (perm === 'granted') {
+        await loadFilesFromHandle(handle, true);
+      } else {
+        // Queue for silent re-request on next user gesture (tab click)
+        _pendingHandles.push(handle);
+      }
     } catch(e) {}
   }
 
-  if (grantedHandles.length) {
-    // Load all already-permitted folders
-    for (const handle of grantedHandles) {
-      await loadFilesFromHandle(handle, true);
-    }
-  }
+  // Show subtle indicator only if there are pending folders
+  _updatePendingBadge();
+}
 
-  if (pendingHandles.length) {
-    const names = pendingHandles.map(h => h.name).join(', ');
-    $('restore-folder-name').textContent = `📂 ${names}`;
-    $('local-restore-prompt').style.display = '';
+function _updatePendingBadge() {
+  const prompt = $('local-restore-prompt');
+  if (!prompt) return;
+  if (_pendingHandles.length > 0) {
+    const names = _pendingHandles.map(h => h.name).join(', ');
+    $('restore-folder-name').textContent = `🔄 מאשר גישה ל: ${names}`;
+    prompt.style.display = '';
+  } else {
+    prompt.style.display = 'none';
+  }
+}
+
+// Called automatically on audio tab switch (counts as user gesture)
+async function requestPendingFolders() {
+  if (!_pendingHandles.length) return;
+  const toProcess = [..._pendingHandles];
+  _pendingHandles = [];
+  _updatePendingBadge();
+
+  for (const handle of toProcess) {
+    try {
+      const perm = await handle.requestPermission({ mode: 'read' });
+      if (perm === 'granted') {
+        await loadFilesFromHandle(handle, true);
+      } else {
+        showToast(MSG.GENERAL_ERROR(`גישה ל"${handle.name}" נדחתה`));
+      }
+    } catch(e) {
+      showToast(MSG.GENERAL_ERROR(`שגיאה בטעינת "${handle.name}"`));
+    }
   }
 }
 
 async function restoreSavedFolders() {
+  // Manual fallback (kept for the restore button)
   const handles = await loadDirHandles();
   if (!handles.length) return;
   $('local-restore-prompt').style.display = 'none';
+  _pendingHandles = [];
   for (const handle of handles) {
     try {
       const perm = await handle.requestPermission({ mode: 'read' });
@@ -2570,7 +2599,7 @@ function renderLocalPlaylists() {
 // ════════════════════════════════════════════════════════════
 //  APP CONSTANTS & VERSION
 // ════════════════════════════════════════════════════════════
-const APP_VERSION = '1.5';
+const APP_VERSION = '1.6';
 
 // ── Message catalogue (6.3.1) ──────────────────────────────
 const MSG = {
@@ -3811,6 +3840,8 @@ switchTab = function(tab) {
     $('home-btn').style.display               = 'none';
     $('quiz-stat-bar').classList.remove('show');
     $('quiz-progress-bar-wrap').style.display = 'none';
+    // Auto-request permission for any pending folder handles (user gesture ✓)
+    requestPendingFolders();
   } else if (tab === 'home') {
     $('home-btn').style.display               = 'none';
     $('quiz-stat-bar').classList.remove('show');
