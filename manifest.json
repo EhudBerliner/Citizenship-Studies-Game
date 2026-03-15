@@ -1,15 +1,27 @@
 {
   "name": "אזרחות — מילון וחידון",
   "short_name": "אזרחות",
-  "start_url": "index.html",
+  "description": "מילון מונחים וחידון אזרחות לבגרות",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f0f2f5",
-  "theme_color": "#2c3e50",
+  "orientation": "portrait-primary",
+  "background_color": "#12234a",
+  "theme_color": "#12234a",
+  "lang": "he",
+  "dir": "rtl",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/1152/1152912.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1152/1152912.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["education"]
 }

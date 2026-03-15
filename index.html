@@ -2,10 +2,13 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#12234a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
-  <title>אזרחות — מילון וחידון v1.1</title>
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1152/1152912.png">
+  <title>אזרחות — מילון וחידון v1.2</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -38,8 +41,13 @@
       --err-bg: #450a0a;
       --shadow: 0 4px 20px rgba(0,0,0,.4);
     }
+    body.no-animations *, body.no-animations *::before, body.no-animations *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    body.large-text { font-size: 110%; }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 
     body {
       font-family: 'Heebo', sans-serif;
@@ -53,7 +61,7 @@
     /* ── HEADER ── */
     #app-header {
       background: var(--navy);
-      padding: 18px 20px 0;
+      padding: calc(env(safe-area-inset-top, 0px) + 18px) 20px 0;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -484,13 +492,96 @@
       #main { padding: 14px 12px; }
       .flash-term { font-size: 1.3rem; }
     }
+
+    /* ── Pull-to-refresh indicator ─────────────────── */
+    #ptr-indicator {
+      position: fixed; top: 0; left: 50%; transform: translateX(-50%) translateY(-60px);
+      background: var(--gold); color: var(--navy);
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; z-index: 9999;
+      transition: transform .2s; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+    #ptr-indicator.ptr-pulling { transform: translateX(-50%) translateY(8px); }
+    #ptr-indicator.ptr-loading { transform: translateX(-50%) translateY(8px); animation: ptrSpin .8s linear infinite; }
+    @keyframes ptrSpin { to { transform: translateX(-50%) translateY(8px) rotate(360deg); } }
+
+    /* ── Hamburger / Settings drawer ──────────────── */
+    #settings-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.5);
+      backdrop-filter: blur(4px); z-index: 9200;
+      display: none; opacity: 0; transition: opacity .25s;
+    }
+    #settings-overlay.open { display: block; opacity: 1; }
+    #settings-drawer {
+      position: fixed; top: 0; left: 0; bottom: 0; width: min(320px, 85vw);
+      background: var(--white); z-index: 9300;
+      transform: translateX(-100%); transition: transform .3s cubic-bezier(.4,0,.2,1);
+      display: flex; flex-direction: column;
+      padding-top: env(safe-area-inset-top, 0px);
+      box-shadow: 4px 0 24px rgba(18,35,74,.18);
+    }
+    #settings-overlay.open + #settings-drawer,
+    #settings-drawer.open { transform: translateX(0); }
+    .drawer-header {
+      background: var(--navy); color: white;
+      padding: 18px 20px; display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .drawer-header h2 { font-family: 'Frank Ruhl Libre',serif; font-size: 1.1rem; font-weight: 700; }
+    .drawer-close {
+      background: rgba(255,255,255,.15); border: none; color: white;
+      width: 30px; height: 30px; border-radius: 50%; font-size: .95rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .drawer-body { flex: 1; overflow-y: auto; padding: 16px; font-family: 'Heebo',sans-serif; }
+    .drawer-section-title {
+      font-size: .72rem; font-weight: 700; color: var(--muted); letter-spacing: .08em;
+      text-transform: uppercase; margin: 16px 0 8px; padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .drawer-section-title:first-child { margin-top: 0; }
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 12px; border-radius: 10px; margin-bottom: 6px;
+      background: #f5f6fa; cursor: pointer; transition: background .15s;
+    }
+    body.dark .setting-row { background: #1e293b; }
+    .setting-row:hover { background: #eef0f8; }
+    body.dark .setting-row:hover { background: #273548; }
+    .setting-row-label { font-size: .9rem; font-weight: 600; color: var(--navy); }
+    body.dark .setting-row-label { color: var(--text); }
+    .setting-row-sub   { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+    .setting-toggle {
+      width: 42px; height: 24px; background: #cbd5e1; border-radius: 12px;
+      position: relative; transition: background .2s; flex-shrink: 0;
+    }
+    .setting-toggle::after {
+      content: ''; position: absolute; top: 3px; right: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: white; transition: right .2s;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .setting-toggle.on { background: var(--navy2); }
+    .setting-toggle.on::after { right: calc(100% - 21px); }
+    /* Hamburger button in header */
+    #hamburger-btn {
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      color: white; width: 34px; height: 34px; border-radius: 10px;
+      font-size: 1rem; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: background .2s;
+    }
+    #hamburger-btn:hover { background: rgba(255,255,255,.22); }
   </style>
 </head>
 <body>
 
 <div id="app-header">
   <div class="header-top">
-    <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.2</button></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button id="hamburger-btn" onclick="openSettings()" aria-label="הגדרות">☰</button>
+      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.2</button></div>
+    </div>
     <button id="home-btn" onclick="goHome()">← חזרה לתפריט</button>
   </div>
   <div id="quiz-stat-bar">
@@ -505,6 +596,62 @@
     <button class="tab active" id="tab-dict"  onclick="switchTab('dict')">📖 מילון מונחים</button>
     <button class="tab"        id="tab-quiz"  onclick="switchTab('quiz')">🏆 חידון</button>
     <button class="tab"        id="tab-audio" onclick="switchTab('audio')">🎵 נגן</button>
+  </div>
+</div>
+
+<!-- ══ PTR INDICATOR ══ -->
+<div id="ptr-indicator">↓</div>
+
+<!-- ══ SETTINGS OVERLAY ══ -->
+<div id="settings-overlay" onclick="closeSettings()"></div>
+<div id="settings-drawer" role="dialog" aria-modal="true" aria-label="הגדרות">
+  <div class="drawer-header">
+    <h2>⚙️ הגדרות</h2>
+    <button class="drawer-close" onclick="closeSettings()" aria-label="סגור">✕</button>
+  </div>
+  <div class="drawer-body">
+
+    <div class="drawer-section-title">תצוגה</div>
+    <div class="setting-row" onclick="toggleDarkMode()">
+      <div>
+        <div class="setting-row-label">🌙 מצב לילה</div>
+        <div class="setting-row-sub">תצוגה כהה לעיניים</div>
+      </div>
+      <div class="setting-toggle" id="s-dark"></div>
+    </div>
+    <div class="setting-row" onclick="toggleSetting('animations')">
+      <div>
+        <div class="setting-row-label">✨ אנימציות</div>
+        <div class="setting-row-sub">מעברים ואפקטים חזותיים</div>
+      </div>
+      <div class="setting-toggle" id="s-animations"></div>
+    </div>
+
+    <div class="drawer-section-title">אינטראקציה</div>
+    <div class="setting-row" onclick="toggleSetting('haptic')">
+      <div>
+        <div class="setting-row-label">📳 רטט (Haptic)</div>
+        <div class="setting-row-sub">משוב פיזי בלחיצות</div>
+      </div>
+      <div class="setting-toggle" id="s-haptic"></div>
+    </div>
+    <div class="setting-row" onclick="toggleSetting('pullToRefresh')">
+      <div>
+        <div class="setting-row-label">↕️ משיכה לרענון</div>
+        <div class="setting-row-sub">גרור למטה מהחלק העליון לרענן</div>
+      </div>
+      <div class="setting-toggle" id="s-pullToRefresh"></div>
+    </div>
+
+    <div class="drawer-section-title">נגישות</div>
+    <div class="setting-row" onclick="toggleSetting('largeText')">
+      <div>
+        <div class="setting-row-label">🔠 טקסט גדול</div>
+        <div class="setting-row-sub">הגדלת גודל הפונט</div>
+      </div>
+      <div class="setting-toggle" id="s-largeText"></div>
+    </div>
+
   </div>
 </div>
 
@@ -2123,15 +2270,31 @@ async function doReset() {
     applyFavFilter();
   }
   if (delAudio) {
-    localStorage.removeItem('audioPlayerState');
+    localStorage.removeItem(AUDIO_STORAGE_KEY);
   }
-  if (delCache && 'caches' in window) {
-    const keys = await caches.keys();
-    await Promise.all(keys.map(k => caches.delete(k)));
+  if (delCache) {
+    // 2.2 Deep clean: caches, SW, sessionStorage, cookies, IndexedDB
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
     if ('serviceWorker' in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
       await Promise.all(regs.map(r => r.unregister()));
     }
+    try { sessionStorage.clear(); } catch(e) {}
+    try {
+      document.cookie.split(';').forEach(c => {
+        document.cookie = c.replace(/^ +/, '').replace(/=.*/, '=;expires=' + new Date(0).toUTCString() + ';path=/');
+      });
+    } catch(e) {}
+    // Wipe IndexedDB (dir handles)
+    try {
+      await new Promise((res, rej) => {
+        const req = indexedDB.deleteDatabase(DIR_HANDLE_DB);
+        req.onsuccess = res; req.onerror = rej; req.onblocked = res;
+      });
+    } catch(e) {}
   }
 
   closeResetModal();
@@ -2139,6 +2302,7 @@ async function doReset() {
   if (delCache) {
     setTimeout(() => location.reload(true), 300);
   } else {
+    hapticSuccess();
     showToast('✅ הנתונים נמחקו בהצלחה', 'ok');
   }
 }
@@ -2416,6 +2580,281 @@ function fmtTime(s) {
   const m = Math.floor(s / 60);
   return `${m}:${String(Math.floor(s % 60)).padStart(2,'0')}`;
 }
+
+// ════════════════════════════════════════════════════════════
+//  SETTINGS SYSTEM
+// ════════════════════════════════════════════════════════════
+const SETTINGS_KEY = 'civ_settings';
+const SETTINGS_DEFAULTS = {
+  dark: false, animations: true, haptic: true,
+  pullToRefresh: false, largeText: false
+};
+let _settings = { ...SETTINGS_DEFAULTS };
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    _settings = { ...SETTINGS_DEFAULTS, ...s };
+    // dark is managed separately
+    _settings.dark = document.body.classList.contains('dark');
+  } catch(e) {}
+  applySettings();
+}
+
+function saveSettings() {
+  _settings.dark = document.body.classList.contains('dark');
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(_settings));
+}
+
+function applySettings() {
+  // Animations
+  document.body.classList.toggle('no-animations', !_settings.animations);
+  // Large text
+  document.body.classList.toggle('large-text', !!_settings.largeText);
+  // Pull-to-refresh
+  if (_settings.pullToRefresh) initPullToRefresh();
+  // Update toggles in drawer
+  const toggles = { dark:'s-dark', animations:'s-animations', haptic:'s-haptic',
+                    pullToRefresh:'s-pullToRefresh', largeText:'s-largeText' };
+  Object.entries(toggles).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on', !!_settings[key]);
+  });
+  // dark-switch in reset modal
+  const ds = document.getElementById('dark-switch');
+  if (ds) ds.classList.toggle('on', document.body.classList.contains('dark'));
+}
+
+function toggleSetting(key) {
+  haptic(10);
+  _settings[key] = !_settings[key];
+  saveSettings();
+  applySettings();
+  if (key === 'pullToRefresh' && _settings.pullToRefresh) initPullToRefresh();
+}
+
+// Override toggleDarkMode to also update settings
+const _origToggleDark = toggleDarkMode;
+toggleDarkMode = function() {
+  _origToggleDark();
+  _settings.dark = document.body.classList.contains('dark');
+  saveSettings();
+  applySettings();
+};
+
+loadSettings();
+
+// ── Haptic feedback ────────────────────────────────────────
+function haptic(ms = 15) {
+  if (!_settings.haptic) return;
+  if ('vibrate' in navigator) navigator.vibrate(ms);
+}
+function hapticError() {
+  if (!_settings.haptic) return;
+  if ('vibrate' in navigator) navigator.vibrate([30, 60, 30]);
+}
+function hapticSuccess() {
+  if (!_settings.haptic) return;
+  if ('vibrate' in navigator) navigator.vibrate([20, 30, 40]);
+}
+
+// Attach haptic to buttons globally
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button, .option-btn, .chapter-btn, .playlist-card, .track-row');
+  if (btn) haptic(8);
+}, { passive: true });
+
+// ── Settings drawer ───────────────────────────────────────
+function openSettings() {
+  haptic(12);
+  document.getElementById('settings-overlay').classList.add('open');
+  document.getElementById('settings-drawer').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  applySettings(); // refresh toggles
+}
+function closeSettings() {
+  document.getElementById('settings-overlay').classList.remove('open');
+  document.getElementById('settings-drawer').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ── Pull-to-Refresh ───────────────────────────────────────
+let _ptrInitialized = false;
+function initPullToRefresh() {
+  if (_ptrInitialized) return;
+  _ptrInitialized = true;
+  let startY = 0, pulling = false;
+  const indicator = document.getElementById('ptr-indicator');
+
+  document.addEventListener('touchstart', e => {
+    if (!_settings.pullToRefresh) return;
+    startY = e.touches[0].clientY;
+    pulling = window.scrollY === 0;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling || !_settings.pullToRefresh) return;
+    const dist = e.touches[0].clientY - startY;
+    if (dist > 40) indicator.classList.add('ptr-pulling');
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!pulling || !_settings.pullToRefresh) return;
+    const dist = e.changedTouches[0].clientY - startY;
+    indicator.classList.remove('ptr-pulling');
+    if (dist > 70) {
+      indicator.classList.add('ptr-loading');
+      hapticSuccess();
+      setTimeout(() => location.reload(), 700);
+    }
+    pulling = false;
+  }, { passive: true });
+}
+
+// ── Swipe gestures ────────────────────────────────────────
+(function initSwipe() {
+  let sx = 0, sy = 0;
+  document.addEventListener('touchstart', e => {
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) < 50 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
+
+    // Close modals/drawers with swipe
+    const drawer = document.getElementById('settings-drawer');
+    if (drawer?.classList.contains('open') && dx < -50) { closeSettings(); return; }
+    const fullPlayer = document.getElementById('full-player');
+    if (fullPlayer && !fullPlayer.classList.contains('hidden') && dy > 60) {
+      closeFullPlayer(); return;
+    }
+    // Tab navigation swipe
+    const tabs = ['dict','quiz','audio'];
+    const activeTab = tabs.findIndex(t => document.getElementById(`tab-${t}`)?.classList.contains('active'));
+    if (activeTab < 0) return;
+    if (dx < -50 && activeTab < tabs.length - 1) switchTab(tabs[activeTab + 1]);
+    else if (dx > 50 && activeTab > 0) switchTab(tabs[activeTab - 1]);
+  }, { passive: true });
+})();
+
+// ── Scroll position persistence ───────────────────────────
+const _scrollKey = 'civ_scrollPos';
+function saveScrollPos() {
+  try {
+    const main = document.getElementById('main');
+    if (main) localStorage.setItem(_scrollKey, main.scrollTop || window.scrollY);
+  } catch(e) {}
+}
+function restoreScrollPos() {
+  try {
+    const pos = parseInt(localStorage.getItem(_scrollKey) || '0');
+    if (!pos) return;
+    setTimeout(() => {
+      const main = document.getElementById('main');
+      if (main) main.scrollTop = pos;
+      else window.scrollTo(0, pos);
+    }, 150);
+  } catch(e) {}
+}
+window.addEventListener('pagehide', saveScrollPos, { passive: true });
+window.addEventListener('blur',     saveScrollPos, { passive: true });
+// Override switchTab to save/restore scroll
+const _origSwitchTab = switchTab;
+switchTab = function(tab) {
+  _origSwitchTab(tab);
+  if (tab === 'dict') setTimeout(restoreScrollPos, 100);
+};
+restoreScrollPos();
+
+// ── Accordion state persistence ────────────────────────────
+const _accordionKey = 'civ_openSections';
+function saveAccordionState() {
+  try {
+    const open = [...document.querySelectorAll('.chapter-body.open, .sub-body.open')]
+      .map(el => el.id).filter(Boolean);
+    localStorage.setItem(_accordionKey, JSON.stringify(open));
+  } catch(e) {}
+}
+function restoreAccordionState() {
+  try {
+    const open = JSON.parse(localStorage.getItem(_accordionKey) || '[]');
+    open.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('open');
+    });
+  } catch(e) {}
+}
+
+// ── Lazy loading ──────────────────────────────────────────
+function initLazyLoading() {
+  if (!('IntersectionObserver' in window)) return;
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        if (img.dataset.src) { img.src = img.dataset.src; delete img.dataset.src; }
+        obs.unobserve(img);
+      }
+    });
+  }, { rootMargin: '200px' });
+  document.querySelectorAll('img[data-src]').forEach(img => obs.observe(img));
+  // Re-run on DOM changes
+  const mutObs = new MutationObserver(() => {
+    document.querySelectorAll('img[data-src]').forEach(img => obs.observe(img));
+  });
+  mutObs.observe(document.getElementById('main') || document.body,
+    { childList: true, subtree: true });
+}
+initLazyLoading();
+
+// ── Audio watchdog ────────────────────────────────────────
+(function initAudioWatchdog() {
+  let lastTime = -1, stuckCount = 0;
+  setInterval(() => {
+    if (audioEl.paused || audioEl.readyState < 2) { lastTime = -1; stuckCount = 0; return; }
+    if (audioEl.currentTime === lastTime) {
+      stuckCount++;
+      if (stuckCount >= 3) { // stuck for ~9s
+        console.warn('[Watchdog] Audio stuck, recovering…');
+        const t = audioEl.currentTime;
+        audioEl.load();
+        audioEl.currentTime = t;
+        audioEl.play().catch(() => {});
+        stuckCount = 0;
+      }
+    } else {
+      stuckCount = 0;
+    }
+    lastTime = audioEl.currentTime;
+  }, 3000);
+})();
+
+// ── Network optimization ──────────────────────────────────
+// Preconnect hints for known hosts
+['https://fonts.googleapis.com','https://fonts.gstatic.com',
+ 'https://cdnjs.cloudflare.com'].forEach(url => {
+  if (!document.querySelector(`link[rel="preconnect"][href="${url}"]`)) {
+    const l = document.createElement('link');
+    l.rel = 'preconnect'; l.href = url; l.crossOrigin = '';
+    document.head.appendChild(l);
+  }
+});
+// Deduplicate fetch: cache version.json result for SW poll interval
+let _lastVersionFetch = 0;
+const _VERSION_POLL_MS = 300000; // 5 min per spec
+
+// ── Fix version polling interval to 300s (spec 1.4) ──────
+// (Patches the already-running interval from initVersionManagement)
+(function fixVersionPollInterval() {
+  // The initVersionManagement already ran with 60s; add a separate 300s poll
+  // that handles SW updates for completeness
+  setInterval(() => {
+    if (_swReg) _swReg.update().catch(() => {});
+  }, _VERSION_POLL_MS);
+})();
 
 </script>
 </body>
