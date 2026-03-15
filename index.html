@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1152/1152912.png">
-  <title>אזרחות — מילון וחידון v1.3</title>
+  <title>אזרחות — מילון וחידון v1.4</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -493,6 +493,154 @@
       .flash-term { font-size: 1.3rem; }
     }
 
+    /* ── Streak badge on version button ───────────────── */
+    .streak-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: var(--gold); color: var(--navy);
+      font-size: .58rem; font-weight: 800;
+      border-radius: 20px; padding: 1px 6px;
+      margin-right: 4px; vertical-align: middle;
+      font-family: 'Heebo', sans-serif;
+    }
+
+    /* ── Dashboard screen ─────────────────────────────── */
+    #screen-home { padding: 0; }
+    .dash-greeting {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 100%);
+      color: white; padding: 22px 20px 18px;
+      font-family: 'Frank Ruhl Libre', serif;
+    }
+    .dash-greeting-name { font-size: 1.3rem; font-weight: 900; margin-bottom: 4px; }
+    .dash-greeting-sub  { font-size: .82rem; color: rgba(255,255,255,.65); }
+    .dash-streak-row {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 10px;
+    }
+    .dash-streak-pill {
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(255,255,255,.15); border-radius: 20px;
+      padding: 4px 12px; font-size: .82rem; font-weight: 700;
+    }
+    .dash-cards {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; padding: 16px;
+    }
+    .dash-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 16px; box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 6px;
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+    }
+    .dash-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(18,35,74,.16); }
+    .dash-card-icon { font-size: 1.6rem; }
+    .dash-card-label { font-size: .75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .dash-card-value { font-size: 1.4rem; font-weight: 900; color: var(--navy); font-family: 'Frank Ruhl Libre', serif; line-height: 1; }
+    .dash-card-sub   { font-size: .72rem; color: var(--muted); }
+    .dash-card.accent { background: var(--navy); }
+    .dash-card.accent .dash-card-label { color: rgba(255,255,255,.6); }
+    .dash-card.accent .dash-card-value { color: var(--gold); }
+    .dash-card.accent .dash-card-sub   { color: rgba(255,255,255,.5); }
+    .dash-now-playing {
+      margin: 0 16px 16px; background: var(--white);
+      border-radius: var(--radius); padding: 14px 16px;
+      box-shadow: var(--shadow); display: none;
+      align-items: center; gap: 12px; cursor: pointer;
+      border-right: 4px solid var(--gold);
+    }
+    .dash-now-playing.visible { display: flex; }
+    .dash-np-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .dash-np-text { flex: 1; min-width: 0; }
+    .dash-np-label { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .dash-np-title { font-size: .9rem; font-weight: 700; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dash-quick-btns { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .dash-action-btn {
+      background: var(--white); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 14px 18px;
+      display: flex; align-items: center; gap: 12px;
+      cursor: pointer; transition: all .15s; font-family: 'Heebo', sans-serif;
+    }
+    .dash-action-btn:hover { border-color: var(--navy2); background: #f0f4ff; }
+    .dash-action-btn-icon  { font-size: 1.3rem; flex-shrink: 0; }
+    .dash-action-btn-label { font-weight: 700; font-size: .92rem; color: var(--navy); }
+    .dash-action-btn-sub   { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+    .dash-action-btn .dash-tag {
+      margin-right: auto; font-size: .68rem; font-weight: 700;
+      background: var(--gold); color: var(--navy);
+      border-radius: 20px; padding: 2px 8px; flex-shrink: 0;
+    }
+
+    /* ── Quiz mode chips in menu ───────────────────────── */
+    .quiz-mode-row {
+      display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .mode-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 20px; border: 2px solid var(--border);
+      background: var(--white); font-size: .82rem; font-weight: 700;
+      cursor: pointer; transition: all .15s; font-family: 'Heebo', sans-serif;
+      color: var(--navy);
+    }
+    .mode-chip:hover        { border-color: var(--navy2); background: #f0f4ff; }
+    .mode-chip.active       { background: var(--navy); color: white; border-color: var(--navy); }
+    .mode-chip.mode-review  .chip-dot { background: #f59e0b; }
+    .chip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--navy2); flex-shrink: 0; }
+    .mode-chip.active .chip-dot { background: var(--gold); }
+
+    /* ── Timer bar ─────────────────────────────────────── */
+    #quiz-timer-bar-wrap {
+      height: 4px; background: rgba(255,255,255,.15);
+      display: none; overflow: hidden;
+    }
+    #quiz-timer-bar {
+      height: 100%; background: var(--gold);
+      transition: width 1s linear, background .5s;
+      width: 100%;
+    }
+    #quiz-timer-bar.urgent { background: #ef4444; }
+    .timer-badge {
+      display: none; position: absolute; top: 8px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--gold); color: var(--navy);
+      font-size: .75rem; font-weight: 800; border-radius: 20px;
+      padding: 2px 10px; font-family: 'Heebo', sans-serif;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    #quiz-card { position: relative; }
+    .timer-badge.visible { display: block; }
+
+    /* ── Progress / weak concepts section ─────────────── */
+    .weak-section {
+      margin-top: 8px; padding: 12px 14px;
+      background: #fffbee; border: 1px solid #fde68a;
+      border-radius: var(--radius);
+    }
+    .weak-title { font-size: .8rem; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+    .weak-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .weak-chip  {
+      font-size: .72rem; font-weight: 600; background: #fef3c7;
+      color: #78350f; border-radius: 20px; padding: 3px 10px;
+    }
+
+    /* ── Playback speed button ─────────────────────────── */
+    .fp-speed-btn {
+      background: rgba(18,35,74,.08); border: 1.5px solid var(--border);
+      border-radius: 20px; padding: 5px 14px; cursor: pointer;
+      font-size: .8rem; font-weight: 800; color: var(--navy);
+      font-family: 'Heebo', sans-serif; transition: all .15s;
+      letter-spacing: .01em;
+    }
+    .fp-speed-btn:hover { background: var(--navy); color: white; border-color: var(--navy); }
+    .fp-speed-btn.active-speed { background: var(--navy); color: white; border-color: var(--navy); }
+    .fp-speed-wrap { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+
+    /* ── Results: weak concepts panel ─────────────────── */
+    .result-weak-wrap {
+      margin-top: 16px; text-align: right;
+    }
+    .result-weak-title { font-size: .82rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+
+
+
     /* ── Pull-to-refresh indicator ─────────────────── */
     #ptr-indicator {
       position: fixed; top: 0; left: 50%; transform: translateX(-50%) translateY(-60px);
@@ -580,7 +728,7 @@
   <div class="header-top">
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="hamburger-btn" onclick="openSettings()" aria-label="הגדרות">☰</button>
-      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.3</button></div>
+      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.4</button></div>
     </div>
     <button id="home-btn" onclick="goHome()">← חזרה לתפריט</button>
   </div>
@@ -592,8 +740,12 @@
   <div id="quiz-progress-bar-wrap">
     <div id="quiz-progress-bar"></div>
   </div>
+  <div id="quiz-timer-bar-wrap">
+    <div id="quiz-timer-bar"></div>
+  </div>
   <div class="tabs">
-    <button class="tab active" id="tab-dict"  onclick="switchTab('dict')">📖 מילון מונחים</button>
+    <button class="tab active" id="tab-home"  onclick="switchTab('home')">🏠 בית</button>
+    <button class="tab"        id="tab-dict"  onclick="switchTab('dict')">📖 מילון</button>
     <button class="tab"        id="tab-quiz"  onclick="switchTab('quiz')">🏆 חידון</button>
     <button class="tab"        id="tab-audio" onclick="switchTab('audio')">🎵 נגן</button>
   </div>
@@ -767,17 +919,105 @@
     <div id="dict-content"></div>
   </div>
 
+  <!-- ══ HOME / DASHBOARD ══ -->
+  <div id="screen-home" class="screen active">
+    <div class="dash-greeting">
+      <div class="dash-greeting-name">שלום! 👋</div>
+      <div class="dash-greeting-sub">מוכן ללמוד אזרחות?</div>
+      <div class="dash-streak-row">
+        <div class="dash-streak-pill" id="dash-streak-pill">🔥 <span id="dash-streak-num">0</span> ימים ברצף</div>
+      </div>
+    </div>
+
+    <div id="dash-now-playing" class="dash-now-playing" onclick="switchTab('audio')">
+      <div class="dash-np-icon">🎵</div>
+      <div class="dash-np-text">
+        <div class="dash-np-label">מתנגן עכשיו</div>
+        <div class="dash-np-title" id="dash-np-title">—</div>
+      </div>
+      <span style="color:var(--muted);font-size:1.2rem;">›</span>
+    </div>
+
+    <div class="dash-cards">
+      <div class="dash-card accent" onclick="switchTab('quiz')">
+        <div class="dash-card-icon">🏆</div>
+        <div class="dash-card-label">ציון אחרון</div>
+        <div class="dash-card-value" id="dash-last-score">—</div>
+        <div class="dash-card-sub"  id="dash-last-chapter">טרם שוחק</div>
+      </div>
+      <div class="dash-card" onclick="switchTab('quiz')">
+        <div class="dash-card-icon">📊</div>
+        <div class="dash-card-label">פרקים</div>
+        <div class="dash-card-value" id="dash-chapters-done">0</div>
+        <div class="dash-card-sub">הושלמו</div>
+      </div>
+      <div class="dash-card" onclick="switchTab('dict')">
+        <div class="dash-card-icon">⭐</div>
+        <div class="dash-card-label">מועדפים</div>
+        <div class="dash-card-value" id="dash-favs-count">0</div>
+        <div class="dash-card-sub">מונחים שמורים</div>
+      </div>
+      <div class="dash-card" onclick="switchTab('dict')">
+        <div class="dash-card-icon">📚</div>
+        <div class="dash-card-label">מושגים חלשים</div>
+        <div class="dash-card-value" id="dash-weak-count">0</div>
+        <div class="dash-card-sub">לחזרה</div>
+      </div>
+    </div>
+
+    <div class="dash-quick-btns">
+      <div class="dash-action-btn" onclick="startFreeQuiz()">
+        <div class="dash-action-btn-icon">🎲</div>
+        <div>
+          <div class="dash-action-btn-label">תרגול חופשי</div>
+          <div class="dash-action-btn-sub">8 שאלות מכל הפרקים</div>
+        </div>
+        <span class="dash-tag">חדש</span>
+      </div>
+      <div class="dash-action-btn" id="dash-retry-weak-btn" onclick="startWeakQuiz()" style="display:none">
+        <div class="dash-action-btn-icon">🔁</div>
+        <div>
+          <div class="dash-action-btn-label">חידון חוזר</div>
+          <div class="dash-action-btn-sub" id="dash-retry-sub">תרגל את המושגים שפספסת</div>
+        </div>
+        <span class="dash-tag" style="background:#fde68a;color:#78350f;">לשיפור</span>
+      </div>
+      <div class="dash-action-btn" onclick="startFreeQuiz('speed')">
+        <div class="dash-action-btn-icon">⚡</div>
+        <div>
+          <div class="dash-action-btn-label">חידון מהיר</div>
+          <div class="dash-action-btn-sub">30 שניות לשאלה, בונוס מהירות</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ══ QUIZ ══ -->
   <div id="screen-quiz" class="screen">
 
     <div id="quiz-menu" class="screen active">
       <div class="section-label">בחר פרק לתרגול</div>
+      <div class="quiz-mode-row">
+        <div class="mode-chip active" id="chip-normal" onclick="setQuizMode('normal')">
+          <span class="chip-dot"></span>רגיל
+        </div>
+        <div class="mode-chip" id="chip-speed" onclick="setQuizMode('speed')">
+          <span class="chip-dot"></span>⚡ מהיר
+        </div>
+        <div class="mode-chip mode-review" id="chip-review" onclick="setQuizMode('review')">
+          <span class="chip-dot"></span>🔁 חוזר
+        </div>
+        <div class="mode-chip" id="chip-free" onclick="startFreeQuiz()">
+          <span class="chip-dot"></span>🎲 חופשי
+        </div>
+      </div>
       <div id="chapter-list"></div>
     </div>
 
     <div id="quiz-active" class="screen">
       <div class="card fade-in" id="quiz-card">
-        <div class="q-counter"    id="q-counter"></div>
+        <div class="timer-badge" id="timer-badge">30</div>
+        <div class="q-counter" id="q-counter"></div>
         <div id="question-text"></div>
         <div id="options-container"></div>
         <div class="feedback-box" id="feedback-box">
@@ -796,8 +1036,16 @@
         <div class="result-bar-wrap">
           <div class="result-bar" id="result-bar" style="width:0%"></div>
         </div>
+        <div class="result-weak-wrap" id="result-weak-wrap" style="display:none">
+          <div class="result-weak-title">📌 מושגים לחזרה:</div>
+          <div class="weak-section">
+            <div class="weak-chips" id="result-weak-chips"></div>
+          </div>
+        </div>
+        <div id="result-bonus-row" style="display:none;text-align:center;font-size:.85rem;font-weight:700;color:var(--gold);margin:8px 0;">⚡ בונוס מהירות: +<span id="result-bonus">0</span> נקודות</div>
         <button class="primary-btn" onclick="backToChapters()">בחר פרק אחר</button>
         <button class="primary-btn secondary" id="retry-btn">🔁 שחק שוב אותו פרק</button>
+        <button class="primary-btn secondary" id="retry-weak-btn" style="display:none" onclick="startWeakQuiz()">🔁 תרגל מושגים שפספסת</button>
       </div>
     </div>
 
@@ -925,6 +1173,13 @@
       <span class="fp-vol-icon">🔈</span>
       <input type="range" id="fp-volume" class="fp-volume" min="0" max="1" step="0.01" value="1">
       <span class="fp-vol-icon">🔊</span>
+    </div>
+
+    <div class="fp-speed-wrap">
+      <button class="fp-speed-btn" onclick="setPlaybackSpeed(0.75)">0.75×</button>
+      <button class="fp-speed-btn active-speed" id="speed-btn-1" onclick="setPlaybackSpeed(1)">1×</button>
+      <button class="fp-speed-btn" onclick="setPlaybackSpeed(1.25)">1.25×</button>
+      <button class="fp-speed-btn" onclick="setPlaybackSpeed(1.5)">1.5×</button>
     </div>
 
     <button class="fp-stop-btn" onclick="stopAudio()" title="עצור">⏹ עצור</button>
@@ -1270,7 +1525,7 @@ body.dark .loaded-folder-name { color:var(--text); }
   width: 22px; height: 22px; border-radius: 50%;
   font-size: .65rem; cursor: pointer; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  margin-top: 1px; transition: background .15s; font-family: sans-serif;
+  margin-top: 1px; transition: background .15s; font-family: 'Heebo', sans-serif;
 }
 .toast-close:hover { background: rgba(255,255,255,.35); }
 
@@ -2154,7 +2409,7 @@ function renderLocalPlaylists() {
 // ════════════════════════════════════════════════════════════
 //  APP CONSTANTS & VERSION
 // ════════════════════════════════════════════════════════════
-const APP_VERSION = '1.3';
+const APP_VERSION = '1.4';
 
 // ── Message catalogue (6.3.1) ──────────────────────────────
 const MSG = {
@@ -2994,7 +3249,425 @@ initLazyLoading();
   }, 3000);
 })();
 
-// ── Network optimization ──────────────────────────────────
+// ════════════════════════════════════════════════════════════
+//  STREAK & POINTS
+// ════════════════════════════════════════════════════════════
+const STREAK_KEY  = 'civ_streak';
+const POINTS_KEY  = 'civ_points';
+
+function getStreak() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STREAK_KEY) || '{}');
+    return { days: d.days || 0, last: d.last || null };
+  } catch(e) { return { days: 0, last: null }; }
+}
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  const s = getStreak();
+  if (s.last === today) return s.days; // already counted today
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  const days = s.last === yesterday ? s.days + 1 : 1;
+  try { localStorage.setItem(STREAK_KEY, JSON.stringify({ days, last: today })); } catch(e){}
+  return days;
+}
+
+function getPoints() {
+  return parseInt(localStorage.getItem(POINTS_KEY) || '0');
+}
+
+function addPoints(pts) {
+  try { localStorage.setItem(POINTS_KEY, String(getPoints() + pts)); } catch(e){}
+}
+
+function renderStreakBadge() {
+  const { days } = getStreak();
+  const title = document.querySelector('.app-title');
+  if (!title) return;
+  let badge = title.querySelector('.streak-badge');
+  if (days < 1) { if (badge) badge.remove(); return; }
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'streak-badge';
+    title.insertBefore(badge, title.querySelector('.app-version'));
+  }
+  badge.textContent = `🔥 ${days}`;
+}
+
+// ════════════════════════════════════════════════════════════
+//  PROGRESS TRACKING (weak concepts)
+// ════════════════════════════════════════════════════════════
+const PROGRESS_KEY = 'civ_progress';
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveProgress(p) {
+  try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch(e) {
+    if (e.name === 'QuotaExceededError') showToast(MSG.STORAGE_FULL);
+  }
+}
+
+// Record result for a concept: { correct, wrong, chapter }
+function recordConceptResult(concept, chapter, correct) {
+  const p = loadProgress();
+  if (!p[concept]) p[concept] = { correct: 0, wrong: 0, chapter };
+  if (correct) p[concept].correct++; else p[concept].wrong++;
+  p[concept].chapter = chapter;
+  saveProgress(p);
+}
+
+// Returns concepts where wrong > correct (needs review)
+function getWeakConcepts(chapterFilter) {
+  const p = loadProgress();
+  return Object.entries(p)
+    .filter(([c, d]) => {
+      if (chapterFilter && d.chapter !== chapterFilter) return false;
+      return d.wrong > 0 && d.wrong >= d.correct;
+    })
+    .map(([concept]) => concept);
+}
+
+function getAllWeakConcepts() {
+  const p = loadProgress();
+  return Object.entries(p)
+    .filter(([, d]) => d.wrong > 0 && d.wrong >= d.correct)
+    .map(([concept]) => concept);
+}
+
+// ════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════
+const HISTORY_KEY = 'civ_history'; // [{chapter, pct, date, mode}]
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { return []; }
+}
+function saveHistoryEntry(entry) {
+  try {
+    const h = loadHistory();
+    h.unshift(entry);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 50)));
+  } catch(e) {}
+}
+
+function refreshDashboard() {
+  const history  = loadHistory();
+  const progress = loadProgress();
+  const weak     = getAllWeakConcepts();
+  const streak   = getStreak();
+
+  // Streak
+  const sNum = document.getElementById('dash-streak-num');
+  if (sNum) sNum.textContent = streak.days;
+
+  // Last score
+  const lastEl  = document.getElementById('dash-last-score');
+  const chapEl  = document.getElementById('dash-last-chapter');
+  if (history.length && lastEl) {
+    lastEl.textContent = history[0].pct + '%';
+    chapEl.textContent = history[0].chapter;
+  }
+
+  // Chapters completed (any score)
+  const done = new Set(history.map(h => h.chapter)).size;
+  const doneEl = document.getElementById('dash-chapters-done');
+  if (doneEl) doneEl.textContent = done;
+
+  // Favorites
+  const favEl = document.getElementById('dash-favs-count');
+  if (favEl) favEl.textContent = favTerms ? favTerms.size : 0;
+
+  // Weak count
+  const weakEl = document.getElementById('dash-weak-count');
+  if (weakEl) weakEl.textContent = weak.length;
+
+  // Show/hide retry weak btn
+  const retryBtn = document.getElementById('dash-retry-weak-btn');
+  const retrySub = document.getElementById('dash-retry-sub');
+  if (retryBtn) {
+    retryBtn.style.display = weak.length ? '' : 'none';
+    if (retrySub) retrySub.textContent = `${weak.length} מושגים לחזרה`;
+  }
+
+  // Now playing
+  const npEl    = document.getElementById('dash-now-playing');
+  const npTitle = document.getElementById('dash-np-title');
+  if (npEl && npTitle) {
+    const spTitle = document.getElementById('sp-title');
+    const title   = spTitle?.textContent;
+    if (title && title !== '—') {
+      npTitle.textContent = title;
+      npEl.classList.add('visible');
+    } else {
+      npEl.classList.remove('visible');
+    }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+//  QUIZ MODES
+// ════════════════════════════════════════════════════════════
+let quizMode     = 'normal';   // 'normal' | 'speed' | 'review'
+let quizTimer    = null;
+let quizTimeLeft = 30;
+let quizSpeedBonus = 0;
+const SPEED_TIMER_SECS = 30;
+
+function setQuizMode(mode) {
+  quizMode = mode;
+  ['normal','speed','review'].forEach(m => {
+    const el = document.getElementById(`chip-${m}`);
+    if (el) el.classList.toggle('active', m === mode);
+  });
+  document.getElementById('chip-free')?.classList.remove('active');
+}
+
+function startFreeQuiz(mode) {
+  if (mode) quizMode = mode; else quizMode = 'normal';
+  setQuizMode(quizMode);
+  quizQuestions   = buildFreeQuizQuestions();
+  quizChapterName = 'תרגול חופשי';
+  quizIdx = 0; quizCorrect = 0; quizSpeedBonus = 0;
+
+  switchTab('quiz');
+  showQuizScreen('quiz-active');
+  $('home-btn').style.display               = 'inline';
+  $('quiz-stat-bar').classList.add('show');
+  $('quiz-progress-bar-wrap').style.display = 'block';
+  showQuestion();
+}
+
+function buildFreeQuizQuestions() {
+  // One question per unique concept across all chapters, shuffled, max 8
+  const byConcept = {};
+  questionsData.forEach(r => {
+    const concept = r["תשובה נכונה"] || r["מושג"] || "כללי";
+    if (!byConcept[concept]) byConcept[concept] = [];
+    byConcept[concept].push(r);
+  });
+  const candidates = Object.values(byConcept).map(qs =>
+    qs[Math.floor(Math.random() * qs.length)]
+  );
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  return candidates.slice(0, QUIZ_MAX_QUESTIONS);
+}
+
+function startWeakQuiz() {
+  const weak = getAllWeakConcepts();
+  if (!weak.length) { showToast('אין מושגים לחזרה כרגע', 'info'); return; }
+  quizMode = 'review';
+  setQuizMode('review');
+
+  // Find questions for weak concepts
+  const byConcept = {};
+  questionsData.forEach(r => {
+    const concept = r["תשובה נכונה"] || r["מושג"] || "כללי";
+    if (weak.includes(concept)) {
+      if (!byConcept[concept]) byConcept[concept] = [];
+      byConcept[concept].push(r);
+    }
+  });
+  const candidates = Object.values(byConcept).map(qs =>
+    qs[Math.floor(Math.random() * qs.length)]
+  );
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+  quizQuestions   = candidates.slice(0, QUIZ_MAX_QUESTIONS);
+  quizChapterName = 'חידון חוזר';
+  quizIdx = 0; quizCorrect = 0; quizSpeedBonus = 0;
+
+  switchTab('quiz');
+  showQuizScreen('quiz-active');
+  $('home-btn').style.display               = 'inline';
+  $('quiz-stat-bar').classList.add('show');
+  $('quiz-progress-bar-wrap').style.display = 'block';
+  showQuestion();
+}
+
+// ── Timer logic ────────────────────────────────────────────
+function startQuestionTimer() {
+  clearQuestionTimer();
+  if (quizMode !== 'speed') return;
+  quizTimeLeft = SPEED_TIMER_SECS;
+
+  const bar    = $('quiz-timer-bar');
+  const badge  = $('timer-badge');
+  const barWrap = $('quiz-timer-bar-wrap');
+
+  if (barWrap) barWrap.style.display = 'block';
+  if (bar)   { bar.style.width = '100%'; bar.classList.remove('urgent'); }
+  if (badge) { badge.textContent = quizTimeLeft; badge.classList.add('visible'); }
+
+  quizTimer = setInterval(() => {
+    quizTimeLeft--;
+    const pct = (quizTimeLeft / SPEED_TIMER_SECS) * 100;
+    if (bar)   { bar.style.width = pct + '%'; bar.classList.toggle('urgent', quizTimeLeft <= 8); }
+    if (badge) badge.textContent = quizTimeLeft;
+    if (quizTimeLeft <= 0) {
+      clearQuestionTimer();
+      hapticError();
+      // Auto-submit wrong answer
+      const q = quizQuestions[quizIdx];
+      if (q) handleAnswer('__timeout__', q, null);
+    }
+  }, 1000);
+}
+
+function clearQuestionTimer() {
+  if (quizTimer) { clearInterval(quizTimer); quizTimer = null; }
+  const barWrap = $('quiz-timer-bar-wrap');
+  const badge   = $('timer-badge');
+  if (barWrap) barWrap.style.display = 'none';
+  if (badge)   badge.classList.remove('visible');
+}
+
+// ── Patch showQuestion to start timer ─────────────────────
+const _origShowQuestion = showQuestion;
+showQuestion = function() {
+  _origShowQuestion();
+  startQuestionTimer();
+};
+
+// ── Patch handleAnswer to record progress + speed bonus ───
+const _origHandleAnswer = handleAnswer;
+handleAnswer = function(selected, q, clickedBtn) {
+  const timeUsed = SPEED_TIMER_SECS - quizTimeLeft;
+  clearQuestionTimer();
+  _origHandleAnswer(selected, q, clickedBtn);
+
+  const correctVal  = q["תשובה נכונה"];
+  const conceptName = q["מושג"];
+  const isCorrect   = selected !== '__timeout__' && (window.clean || clean)(selected) === correctVal;
+
+  // Record for progress tracking
+  recordConceptResult(conceptName || correctVal, quizChapterName, isCorrect);
+
+  // Speed bonus: up to 10 pts per question if answered in < 10s
+  if (quizMode === 'speed' && isCorrect && timeUsed < 10) {
+    const bonus = Math.round((10 - timeUsed) * 2);
+    quizSpeedBonus += bonus;
+  }
+};
+
+// ── Patch showResults to save history + show weak ─────────
+const _origShowResults = showResults;
+showResults = function() {
+  _origShowResults();
+  clearQuestionTimer();
+
+  const pct = Math.round(quizCorrect / quizQuestions.length * 100);
+
+  // Save history entry
+  saveHistoryEntry({ chapter: quizChapterName, pct, date: new Date().toDateString(), mode: quizMode });
+
+  // Update streak & points
+  const days  = updateStreak();
+  const base  = Math.round((quizCorrect / quizQuestions.length) * 100);
+  addPoints(base + quizSpeedBonus);
+  renderStreakBadge();
+
+  // Speed bonus display
+  const bonusRow = $('result-bonus-row');
+  const bonusNum = $('result-bonus');
+  if (bonusRow) bonusRow.style.display = quizSpeedBonus > 0 ? 'block' : 'none';
+  if (bonusNum) bonusNum.textContent   = quizSpeedBonus;
+
+  // Weak concepts display
+  const wrongConcepts = quizQuestions
+    .filter((q, i) => {
+      // Find misses from last quiz via progress data
+      const concept = q["מושג"];
+      const p = loadProgress();
+      return p[concept] && p[concept].wrong > 0 && p[concept].wrong >= p[concept].correct;
+    })
+    .map(q => q["מושג"])
+    .filter(Boolean);
+
+  const wrapEl  = $('result-weak-wrap');
+  const chipsEl = $('result-weak-chips');
+  const retryWeak = $('retry-weak-btn');
+  if (wrapEl && wrongConcepts.length) {
+    wrapEl.style.display = 'block';
+    chipsEl.innerHTML = wrongConcepts.map(c => `<span class="weak-chip">${c}</span>`).join('');
+    if (retryWeak) retryWeak.style.display = 'block';
+  } else {
+    if (wrapEl)     wrapEl.style.display     = 'none';
+    if (retryWeak)  retryWeak.style.display  = 'none';
+  }
+  refreshDashboard();
+};
+
+// ── Patch startQuiz to reset timer state ──────────────────
+const _origStartQuiz = startQuiz;
+startQuiz = function(chapterName) {
+  quizMode = quizMode || 'normal';
+  quizSpeedBonus = 0;
+  clearQuestionTimer();
+  _origStartQuiz(chapterName);
+};
+
+// ── Patch backToChapters to clear timer ───────────────────
+const _origBack = backToChapters;
+backToChapters = function() {
+  clearQuestionTimer();
+  _origBack();
+};
+
+// ── Playback speed ─────────────────────────────────────────
+const SPEED_STEPS = [0.75, 1, 1.25, 1.5];
+function setPlaybackSpeed(rate) {
+  audioEl.playbackRate = rate;
+  document.querySelectorAll('.fp-speed-btn').forEach(btn => {
+    btn.classList.toggle('active-speed', parseFloat(btn.textContent) === rate);
+  });
+}
+
+// ── switchTab update: add home tab + refresh dashboard ─────
+switchTab = function(tab) {
+  const allTabs = ['home','dict','quiz','audio'];
+  allTabs.forEach(t => {
+    const tabEl    = document.getElementById(`tab-${t}`);
+    const screenEl = document.getElementById(`screen-${t}`);
+    if (tabEl)    tabEl.classList.toggle('active',    t === tab);
+    if (screenEl) screenEl.classList.toggle('active', t === tab);
+  });
+  if (tab === 'dict') {
+    $('home-btn').style.display               = 'none';
+    $('quiz-stat-bar').classList.remove('show');
+    $('quiz-progress-bar-wrap').style.display = 'none';
+    setTimeout(restoreScrollPos, 100);
+  } else if (tab === 'quiz' && $('quiz-active').classList.contains('active')) {
+    $('home-btn').style.display               = 'inline';
+    $('quiz-stat-bar').classList.add('show');
+    $('quiz-progress-bar-wrap').style.display = 'block';
+  } else if (tab === 'audio') {
+    $('home-btn').style.display               = 'none';
+    $('quiz-stat-bar').classList.remove('show');
+    $('quiz-progress-bar-wrap').style.display = 'none';
+  } else if (tab === 'home') {
+    $('home-btn').style.display               = 'none';
+    $('quiz-stat-bar').classList.remove('show');
+    $('quiz-progress-bar-wrap').style.display = 'none';
+    refreshDashboard();
+  } else {
+    $('home-btn').style.display               = 'none';
+    $('quiz-stat-bar').classList.remove('show');
+    $('quiz-progress-bar-wrap').style.display = 'none';
+  }
+};
+
+// ── Init on load ───────────────────────────────────────────
+updateStreak();
+renderStreakBadge();
+refreshDashboard();
+
+
 // Preconnect hints for known hosts
 ['https://fonts.googleapis.com','https://fonts.gstatic.com',
  'https://cdnjs.cloudflare.com'].forEach(url => {
