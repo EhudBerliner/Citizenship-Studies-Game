@@ -668,20 +668,21 @@
           <div class="audio-folder-card restore-card">
             <div class="audio-folder-icon">📂</div>
             <div class="audio-folder-text">
-              <div class="audio-folder-title" id="restore-folder-name">תיקייה שמורה</div>
-              <div class="audio-folder-sub">לחץ לטעינה מחדש של התיקייה השמורה</div>
+              <div class="audio-folder-title" id="restore-folder-name">תיקיות שמורות</div>
+              <div class="audio-folder-sub">לחץ לטעינה מחדש של התיקיות השמורות</div>
             </div>
-            <button class="audio-open-btn" onclick="restoreSavedFolder()">טען</button>
+            <button class="audio-open-btn" onclick="restoreSavedFolders()">טען</button>
           </div>
         </div>
         <div class="audio-folder-card">
-          <div class="audio-folder-icon">📂</div>
+          <div class="audio-folder-icon">➕</div>
           <div class="audio-folder-text">
-            <div class="audio-folder-title">בחר תיקיית שירים</div>
+            <div class="audio-folder-title">הוסף תיקיית שירים</div>
             <div class="audio-folder-sub">כל תת-תיקייה תהפוך לפלייליסט</div>
           </div>
           <button class="audio-open-btn" onclick="pickLocalFolder()">פתח</button>
         </div>
+        <div id="loaded-folders-list"></div>
         <div id="local-playlists-list"></div>
       </div>
 
@@ -711,7 +712,10 @@
       <div class="sp-art" id="sp-art">🎵</div>
       <div class="sp-meta">
         <div class="sp-title" id="sp-title">—</div>
-        <div class="sp-artist" id="sp-artist">—</div>
+        <div class="sp-time-row">
+          <span class="sp-artist" id="sp-artist">—</span>
+          <span class="sp-time-display" id="sp-time-display"></span>
+        </div>
       </div>
     </div>
     <div class="sp-controls">
@@ -925,8 +929,32 @@
 }
 .sp-art img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
 .sp-meta { min-width:0; }
-.sp-title  { font-size:.85rem; font-weight:700; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sp-artist { font-size:.72rem; color:rgba(255,255,255,.55); margin-top:1px; }
+.sp-time-row {
+  display:flex; align-items:center; justify-content:space-between; gap:6px;
+}
+.sp-artist { font-size:.72rem; color:rgba(255,255,255,.55); margin-top:1px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sp-time-display {
+  font-size:.68rem; color:rgba(255,255,255,.45); font-variant-numeric:tabular-nums;
+  flex-shrink:0; font-family:'Heebo',sans-serif; letter-spacing:.01em;
+}
+
+/* Loaded folders row */
+.loaded-folder-row {
+  display:flex; align-items:center; gap:8px;
+  padding:7px 12px; background:#f0f0f8; border-radius:10px; margin-bottom:6px;
+  font-family:'Heebo',sans-serif;
+}
+body.dark .loaded-folder-row { background:#1e293b; }
+.loaded-folder-name { flex:1; font-size:.85rem; font-weight:600; color:var(--navy); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+body.dark .loaded-folder-name { color:var(--text); }
+.loaded-folder-count { font-size:.75rem; color:var(--muted); flex-shrink:0; }
+.loaded-folder-remove {
+  background:none; border:none; color:var(--muted); cursor:pointer;
+  font-size:.85rem; padding:2px 6px; border-radius:6px; flex-shrink:0;
+  transition:color .15s, background .15s;
+}
+.loaded-folder-remove:hover { color:#dc2626; background:#fee2e2; }
+
 .sp-controls { display:flex; align-items:center; gap:8px; flex-shrink:0; }
 .sp-btn {
   background:none; border:none; color:white; cursor:pointer;
@@ -1638,34 +1666,74 @@ let isSeeking       = false;
 //  LOCAL FOLDER PERSISTENCE (File System Access API + IndexedDB)
 // ════════════════════════════════════════════════════════════
 
+// ════════════════════════════════════════════════════════════
+//  LOCAL FOLDER PERSISTENCE (File System Access API + IndexedDB)
+// ════════════════════════════════════════════════════════════
+
 async function openDirHandleDB() {
   return new Promise((res, rej) => {
-    const req = indexedDB.open(DIR_HANDLE_DB, 1);
-    req.onupgradeneeded = e => e.target.result.createObjectStore(DIR_HANDLE_STORE);
-    req.onsuccess       = e => res(e.target.result);
-    req.onerror         = () => rej(req.error);
+    const req = indexedDB.open(DIR_HANDLE_DB, 2);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(DIR_HANDLE_STORE))
+        db.createObjectStore(DIR_HANDLE_STORE);
+    };
+    req.onsuccess = e => res(e.target.result);
+    req.onerror   = () => rej(req.error);
   });
 }
 
-async function saveDirHandle(handle) {
+// Returns array of {handle, name} saved handles
+async function loadDirHandles() {
+  try {
+    const db = await openDirHandleDB();
+    const tx = db.transaction(DIR_HANDLE_STORE, 'readonly');
+    const store = tx.objectStore(DIR_HANDLE_STORE);
+    // Load new multi-handle key
+    const multi = await new Promise(res => {
+      const r = store.get('localDirs');
+      r.onsuccess = () => res(r.result || null);
+      r.onerror   = () => res(null);
+    });
+    if (multi) return multi;
+    // Migrate old single handle
+    const single = await new Promise(res => {
+      const r = store.get('localDir');
+      r.onsuccess = () => res(r.result || null);
+      r.onerror   = () => res(null);
+    });
+    return single ? [single] : [];
+  } catch(e) { return []; }
+}
+
+async function saveDirHandles(handles) {
   try {
     const db = await openDirHandleDB();
     const tx = db.transaction(DIR_HANDLE_STORE, 'readwrite');
-    tx.objectStore(DIR_HANDLE_STORE).put(handle, 'localDir');
+    tx.objectStore(DIR_HANDLE_STORE).put(handles, 'localDirs');
     await new Promise((res, rej) => { tx.oncomplete = res; tx.onerror = rej; });
   } catch(e) {}
 }
 
-async function loadDirHandle() {
-  try {
-    const db = await openDirHandleDB();
-    const tx = db.transaction(DIR_HANDLE_STORE, 'readonly');
-    const req = tx.objectStore(DIR_HANDLE_STORE).get('localDir');
-    return await new Promise(res => { req.onsuccess = () => res(req.result || null); req.onerror = () => res(null); });
-  } catch(e) { return null; }
+async function addDirHandle(handle) {
+  const handles = await loadDirHandles();
+  // Avoid duplicates by name
+  const idx = handles.findIndex(h => h.name === handle.name);
+  if (idx >= 0) handles[idx] = handle; else handles.push(handle);
+  await saveDirHandles(handles);
 }
 
-async function loadFilesFromHandle(handle) {
+async function removeDirHandle(folderName) {
+  const handles = await loadDirHandles();
+  const filtered = handles.filter(h => h.name !== folderName);
+  await saveDirHandles(filtered);
+  // Remove playlists from this root folder
+  playlists = playlists.filter(p => !(p.source === 'local' && p.rootFolder === folderName));
+  renderLocalPlaylists();
+  renderLoadedFolders();
+}
+
+async function loadFilesFromHandle(handle, additive = false) {
   const rootName = handle.name;
   const groups = {};
   async function scanDir(dirHandle, path) {
@@ -1682,30 +1750,36 @@ async function loadFilesFromHandle(handle) {
   try {
     await scanDir(handle, '');
   } catch(e) {
-    showToast('⚠️ שגיאה בקריאת התיקייה');
+    showToast('⚠️ שגיאה בקריאת התיקייה', 'warn');
     return;
   }
 
-  if (!Object.keys(groups).length) { showToast('לא נמצאו קבצי אודיו'); return; }
+  if (!Object.keys(groups).length) { showToast('לא נמצאו קבצי אודיו', 'warn'); return; }
 
-  playlists = playlists.filter(p => p.source !== 'local');
+  // Remove old playlists from this root folder, keep others
+  if (additive) {
+    playlists = playlists.filter(p => !(p.source === 'local' && p.rootFolder === rootName));
+  } else {
+    playlists = playlists.filter(p => p.source !== 'local');
+  }
+
   for (const [name, files] of Object.entries(groups)) {
     const tracks = await Promise.all(files.map(async f => {
       const file = await f.handle.getFile();
       return readTrackMeta(file);
     }));
     tracks.sort((a,b) => a.title.localeCompare(b.title, 'he'));
-    playlists.push({ name, source: 'local', tracks });
+    playlists.push({ name, source: 'local', rootFolder: rootName, tracks });
   }
   playlists.sort((a,b) => a.name.localeCompare(b.name, 'he'));
 
   renderLocalPlaylists();
-  restoreAudioState();
+  renderLoadedFolders();
+  if (!additive) restoreAudioState();
 }
 
 async function pickLocalFolder() {
   if (!window.showDirectoryPicker) {
-    // Fallback to old file input
     const inp = document.createElement('input');
     inp.type = 'file'; inp.webkitdirectory = true; inp.multiple = true; inp.accept = 'audio/*';
     inp.onchange = () => handleFolderPickFallback(inp.files);
@@ -1714,46 +1788,83 @@ async function pickLocalFolder() {
   }
   try {
     const handle = await window.showDirectoryPicker({ mode: 'read' });
-    await saveDirHandle(handle);
+    await addDirHandle(handle);
     $('local-restore-prompt').style.display = 'none';
-    await loadFilesFromHandle(handle);
+    await loadFilesFromHandle(handle, true);
+    showToast(`📂 "${handle.name}" נוספה`, 'ok');
   } catch(e) {
-    if (e.name !== 'AbortError') showToast('⚠️ לא ניתן לגשת לתיקייה');
+    if (e.name !== 'AbortError') showToast('⚠️ לא ניתן לגשת לתיקייה', 'warn');
   }
 }
 
 async function tryRestoreLocalFolder() {
-  const handle = await loadDirHandle();
-  if (!handle) return;
-  try {
-    const perm = await handle.queryPermission({ mode: 'read' });
-    if (perm === 'granted') {
-      // Permission already granted — load silently
-      await loadFilesFromHandle(handle);
-    } else {
-      // Need user gesture to re-request — show restore button
-      const nameToShow = handle.name || 'תיקייה שמורה';
-      $('restore-folder-name').textContent = '📂 ' + nameToShow;
-      $('local-restore-prompt').style.display = '';
-    }
-  } catch(e) {}
-}
+  const handles = await loadDirHandles();
+  if (!handles.length) return;
 
-async function restoreSavedFolder() {
-  const handle = await loadDirHandle();
-  if (!handle) return;
-  try {
-    const perm = await handle.requestPermission({ mode: 'read' });
-    if (perm === 'granted') {
-      $('local-restore-prompt').style.display = 'none';
-      await loadFilesFromHandle(handle);
-    } else {
-      showToast('⚠️ גישה לתיקייה נדחתה');
+  const grantedHandles = [];
+  const pendingHandles = [];
+
+  for (const handle of handles) {
+    try {
+      const perm = await handle.queryPermission({ mode: 'read' });
+      if (perm === 'granted') grantedHandles.push(handle);
+      else pendingHandles.push(handle);
+    } catch(e) {}
+  }
+
+  if (grantedHandles.length) {
+    // Load all already-permitted folders
+    for (const handle of grantedHandles) {
+      await loadFilesFromHandle(handle, true);
     }
-  } catch(e) {
-    showToast('⚠️ שגיאה בטעינת התיקייה');
+  }
+
+  if (pendingHandles.length) {
+    const names = pendingHandles.map(h => h.name).join(', ');
+    $('restore-folder-name').textContent = `📂 ${names}`;
+    $('local-restore-prompt').style.display = '';
   }
 }
+
+async function restoreSavedFolders() {
+  const handles = await loadDirHandles();
+  if (!handles.length) return;
+  $('local-restore-prompt').style.display = 'none';
+  for (const handle of handles) {
+    try {
+      const perm = await handle.requestPermission({ mode: 'read' });
+      if (perm === 'granted') await loadFilesFromHandle(handle, true);
+      else showToast(`⚠️ גישה ל"${handle.name}" נדחתה`, 'warn');
+    } catch(e) {
+      showToast(`⚠️ שגיאה בטעינת "${handle.name}"`, 'warn');
+    }
+  }
+}
+
+// Keep old name for backward compat
+const restoreSavedFolder = restoreSavedFolders;
+
+function renderLoadedFolders() {
+  const el = document.getElementById('loaded-folders-list');
+  if (!el) return;
+  // Collect unique root folders currently in playlists
+  const roots = [...new Set(
+    playlists.filter(p => p.source === 'local' && p.rootFolder)
+             .map(p => p.rootFolder)
+  )];
+  if (!roots.length) { el.innerHTML = ''; return; }
+  el.innerHTML = roots.map(name => {
+    const count = playlists.filter(p => p.rootFolder === name).reduce((s,p) => s + p.tracks.length, 0);
+    const plCount = playlists.filter(p => p.rootFolder === name).length;
+    return `<div class="loaded-folder-row">
+      <span style="font-size:1rem;flex-shrink:0">📁</span>
+      <span class="loaded-folder-name">${name}</span>
+      <span class="loaded-folder-count">${plCount > 1 ? plCount+' פלייליסטים · ' : ''}${count} שירים</span>
+      <button class="loaded-folder-remove" onclick="removeDirHandle('${name.replace(/'/g,"\\'")}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
 
 // Fallback for browsers without File System Access API
 async function handleFolderPickFallback(files) {
@@ -1800,6 +1911,7 @@ function renderLocalPlaylists() {
   const pls = playlists.filter(p => p.source === 'local');
   if (!pls.length) {
     el.innerHTML = '';
+    renderLoadedFolders();
     return;
   }
   el.innerHTML = pls.map(pl => {
@@ -1809,11 +1921,12 @@ function renderLocalPlaylists() {
       <div class="playlist-card-art">🎵</div>
       <div class="playlist-card-info">
         <div class="playlist-card-name">${pl.name}</div>
-        <div class="playlist-card-count">${pl.tracks.length} שירים</div>
+        <div class="playlist-card-count">${pl.tracks.length} שירים${pl.rootFolder && pl.rootFolder !== pl.name ? ` · ${pl.rootFolder}` : ''}</div>
       </div>
       <span class="playlist-card-src local">📱 מכשיר</span>
     </div>`;
   }).join('');
+  renderLoadedFolders();
 }
 
 
@@ -2180,8 +2293,13 @@ function updateSeekBar() {
   const pct = audioEl.duration ? (audioEl.currentTime / audioEl.duration) * 100 : 0;
   seek.value = pct;
   seek.style.background = `linear-gradient(to left, var(--border) ${100-pct}%, var(--navy2) ${100-pct}%)`;
-  $('fp-current').textContent  = fmtTime(audioEl.currentTime);
-  $('fp-duration').textContent = fmtTime(audioEl.duration || 0);
+  const cur = fmtTime(audioEl.currentTime);
+  const dur = fmtTime(audioEl.duration || 0);
+  $('fp-current').textContent  = cur;
+  $('fp-duration').textContent = dur;
+  // Sticky player time
+  const spTime = $('sp-time-display');
+  if (spTime && audioEl.duration) spTime.textContent = `${cur} / ${dur}`;
 }
 
 // ── Full Player ───────────────────────────────────────────
