@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1152/1152912.png">
-  <title>אזרחות — מילון וחידון v1.6</title>
+  <title>אזרחות — מילון וחידון v1.7</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -769,7 +769,7 @@
   <div class="header-top">
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="hamburger-btn" onclick="openSettings()" aria-label="הגדרות">☰</button>
-      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.6</button></div>
+      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.7</button></div>
     </div>
     <button id="home-btn" onclick="goHome()">← חזרה לתפריט</button>
   </div>
@@ -1055,30 +1055,6 @@
     <div>טוען נתונים...</div>
   </div>
 
-  <!-- ══ DICTIONARY ══ -->
-  <div id="screen-dict" class="screen">
-    <div id="flash-card">
-      <div class="flash-term"    id="flash-term">הגרל מונח לתרגול</div>
-      <div class="flash-chapter" id="flash-chapter"></div>
-      <div class="flash-def"     id="flash-def"></div>
-      <div class="flash-btns">
-        <button class="flash-btn draw"   onclick="drawTerm()">🎲 הגרל</button>
-        <button class="flash-btn reveal" onclick="revealTerm()">👁 חשוף</button>
-      </div>
-    </div>
-
-    <div class="dict-toolbar">
-      <div id="dict-search-wrap">
-        <span style="color:var(--muted);font-size:.95rem">🔍</span>
-        <input type="search" id="dict-search" placeholder="חפש מונח..." oninput="onSearch(this.value)">
-        <button id="clear-search" onclick="clearSearch()">✕</button>
-      </div>
-      <button class="dict-icon-btn" id="fav-filter-btn" title="מועדפים בלבד" onclick="toggleFavFilter()">⭐</button>
-      <button class="dict-icon-btn" id="toggle-all-btn" title="פתח / סגור הכל" onclick="toggleAllSections()">⇕</button>
-    </div>
-
-    <div id="dict-content"></div>
-  </div>
 
   <!-- ══ HOME / DASHBOARD ══ -->
   <div id="screen-home" class="screen active">
@@ -1151,6 +1127,31 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- ══ DICTIONARY ══ -->
+  <div id="screen-dict" class="screen">
+    <div id="flash-card">
+      <div class="flash-term"    id="flash-term">הגרל מונח לתרגול</div>
+      <div class="flash-chapter" id="flash-chapter"></div>
+      <div class="flash-def"     id="flash-def"></div>
+      <div class="flash-btns">
+        <button class="flash-btn draw"   onclick="drawTerm()">🎲 הגרל</button>
+        <button class="flash-btn reveal" onclick="revealTerm()">👁 חשוף</button>
+      </div>
+    </div>
+
+    <div class="dict-toolbar">
+      <div id="dict-search-wrap">
+        <span style="color:var(--muted);font-size:.95rem">🔍</span>
+        <input type="search" id="dict-search" placeholder="חפש מונח..." oninput="onSearch(this.value)">
+        <button id="clear-search" onclick="clearSearch()">✕</button>
+      </div>
+      <button class="dict-icon-btn" id="fav-filter-btn" title="מועדפים בלבד" onclick="toggleFavFilter()">⭐</button>
+      <button class="dict-icon-btn" id="toggle-all-btn" title="פתח / סגור הכל" onclick="toggleAllSections()">⇕</button>
+    </div>
+
+    <div id="dict-content"></div>
   </div>
 
   <!-- ══ QUIZ ══ -->
@@ -1844,7 +1845,7 @@ const escRe = s  => s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 
 // ── Boot: load both CSVs ──────────────────────────────────
 let loaded = 0;
-function onLoaded() { if (++loaded === 2) { $('loader').style.display='none'; initDict(); initQuizMenu(); $('screen-dict').classList.add('active'); } }
+function onLoaded() { if (++loaded === 2) { $('loader').style.display='none'; initDict(); initQuizMenu(); switchTab('home'); } }
 
 Papa.parse(`${TERMS_FILE}?v=${Date.now()}`, {
   download:true, header:true, skipEmptyLines:true,
@@ -2599,7 +2600,7 @@ function renderLocalPlaylists() {
 // ════════════════════════════════════════════════════════════
 //  APP CONSTANTS & VERSION
 // ════════════════════════════════════════════════════════════
-const APP_VERSION = '1.6';
+const APP_VERSION = '1.7';
 
 // ── Message catalogue (6.3.1) ──────────────────────────────
 const MSG = {
@@ -3338,8 +3339,8 @@ function initPullToRefresh() {
     if (fullPlayer && !fullPlayer.classList.contains('hidden') && dy > 60) {
       closeFullPlayer(); return;
     }
-    // Tab navigation swipe
-    const tabs = ['dict','quiz','audio'];
+    // Tab navigation swipe (RTL: swipe right = previous tab, swipe left = next tab)
+    const tabs = ['home','dict','quiz','audio'];
     const activeTab = tabs.findIndex(t => document.getElementById(`tab-${t}`)?.classList.contains('active'));
     if (activeTab < 0) return;
     if (dx < -50 && activeTab < tabs.length - 1) switchTab(tabs[activeTab + 1]);
