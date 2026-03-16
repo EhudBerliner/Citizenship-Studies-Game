@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1152/1152912.png">
-  <title>אזרחות — מילון וחידון v1.7</title>
+  <title>אזרחות — מילון וחידון v1.8</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -593,7 +593,7 @@
     }
     #quiz-timer-bar {
       height: 100%; background: var(--gold);
-      transition: width 1s linear, background .5s;
+      transition: background .4s;
       width: 100%;
     }
     #quiz-timer-bar.urgent { background: #ef4444; }
@@ -769,7 +769,7 @@
   <div class="header-top">
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="hamburger-btn" onclick="openSettings()" aria-label="הגדרות">☰</button>
-      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.7</button></div>
+      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.8</button></div>
     </div>
     <button id="home-btn" onclick="goHome()">← חזרה לתפריט</button>
   </div>
@@ -2600,7 +2600,7 @@ function renderLocalPlaylists() {
 // ════════════════════════════════════════════════════════════
 //  APP CONSTANTS & VERSION
 // ════════════════════════════════════════════════════════════
-const APP_VERSION = '1.7';
+const APP_VERSION = '1.8';
 
 // ── Message catalogue (6.3.1) ──────────────────────────────
 const MSG = {
@@ -3687,12 +3687,20 @@ function startQuestionTimer() {
   if (quizMode !== 'speed') return;
   quizTimeLeft = SPEED_TIMER_SECS;
 
-  const bar    = $('quiz-timer-bar');
-  const badge  = $('timer-badge');
+  const bar     = $('quiz-timer-bar');
+  const badge   = $('timer-badge');
   const barWrap = $('quiz-timer-bar-wrap');
 
+  // Show wrap first, then force reflow before setting width
+  // so the browser doesn't carry over any previous transition state
   if (barWrap) barWrap.style.display = 'block';
-  if (bar)   { bar.style.width = '100%'; bar.classList.remove('urgent'); }
+  if (bar) {
+    bar.style.transition = 'none';        // disable transition temporarily
+    bar.style.width      = '100%';
+    bar.classList.remove('urgent');
+    bar.getBoundingClientRect();          // force reflow — flushes pending transitions
+    bar.style.transition = '';            // re-enable (inherits from CSS)
+  }
   if (badge) { badge.textContent = quizTimeLeft; badge.classList.add('visible'); }
 
   quizTimer = setInterval(() => {
@@ -3703,7 +3711,6 @@ function startQuestionTimer() {
     if (quizTimeLeft <= 0) {
       clearQuestionTimer();
       hapticError();
-      // Auto-submit wrong answer
       const q = quizQuestions[quizIdx];
       if (q) handleAnswer('__timeout__', q, null);
     }
