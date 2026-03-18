@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1152/1152912.png">
-  <title>אזרחות — מילון וחידון v1.8</title>
+  <title data-i18n="app.title" data-i18n-suffix=" v1.9">אזרחות — מילון וחידון v1.9</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@400;700;900&family=Heebo:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -769,14 +769,14 @@
   <div class="header-top">
     <div style="display:flex;align-items:center;gap:8px;">
       <button id="hamburger-btn" onclick="openSettings()" aria-label="הגדרות">☰</button>
-      <div class="app-title">🏛 <span>אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.8</button></div>
+      <div class="app-title">🏛 <span data-i18n="app.titleShort">אזרחות</span><button class="app-version" onclick="openResetModal()" title="הגדרות ואיפוס">v1.9</button></div>
     </div>
-    <button id="home-btn" onclick="goHome()">← חזרה לתפריט</button>
+    <button id="home-btn" onclick="goHome()" data-i18n="header.homeBtn">← חזרה לתפריט</button>
   </div>
   <div id="quiz-stat-bar">
     <span id="stat-chapter"></span>
     <span id="stat-progress"></span>
-    <button id="quit-quiz-btn" onclick="openQuitModal()" title="יציאה מהחידון" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:3px 10px;border-radius:14px;font-size:.75rem;cursor:pointer;font-family:'Heebo',sans-serif;transition:background .2s;">✕ צא</button>
+    <button id="quit-quiz-btn" onclick="openQuitModal()" title="יציאה מהחידון" data-i18n-title="header.quitBtnTitle" style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:3px 10px;border-radius:14px;font-size:.75rem;cursor:pointer;font-family:'Heebo',sans-serif;transition:background .2s;">✕ צא</button>
   </div>
   <div id="quiz-progress-bar-wrap">
     <div id="quiz-progress-bar"></div>
@@ -785,10 +785,10 @@
     <div id="quiz-timer-bar"></div>
   </div>
   <div class="tabs">
-    <button class="tab active" id="tab-home"  onclick="switchTab('home')">🏠 בית</button>
-    <button class="tab"        id="tab-dict"  onclick="switchTab('dict')">📖 מילון</button>
-    <button class="tab"        id="tab-quiz"  onclick="switchTab('quiz')">🏆 חידון</button>
-    <button class="tab"        id="tab-audio" onclick="switchTab('audio')">🎵 נגן</button>
+    <button class="tab active" id="tab-home"  onclick="switchTab('home')" data-i18n="tabs.home">🏠 בית</button>
+    <button class="tab"        id="tab-dict"  onclick="switchTab('dict')" data-i18n="tabs.dict">📖 מילון</button>
+    <button class="tab"        id="tab-quiz"  onclick="switchTab('quiz')" data-i18n="tabs.quiz">🏆 חידון</button>
+    <button class="tab"        id="tab-audio" onclick="switchTab('audio')" data-i18n="tabs.audio">🎵 נגן</button>
   </div>
 </div>
 
@@ -799,63 +799,63 @@
 <div id="settings-overlay" onclick="closeSettings()"></div>
 <div id="settings-drawer" role="dialog" aria-modal="true" aria-label="הגדרות">
   <div class="drawer-header">
-    <h2>⚙️ הגדרות</h2>
-    <button class="drawer-close" onclick="closeSettings()" aria-label="סגור">✕</button>
+    <h2 data-i18n="settings.panelTitle">⚙️ הגדרות</h2>
+    <button class="drawer-close" onclick="closeSettings()" aria-label="סגור" data-i18n-aria="settings.closeBtn">✕</button>
   </div>
   <div class="drawer-body">
 
-    <div class="drawer-section-title">תצוגה</div>
+    <div class="drawer-section-title" data-i18n="settings.sectionDisplay">תצוגה</div>
     <div class="setting-row" onclick="toggleDarkMode()">
       <div>
-        <div class="setting-row-label">🌙 מצב לילה</div>
-        <div class="setting-row-sub">תצוגה כהה לעיניים</div>
+        <div class="setting-row-label" data-i18n="settings.darkMode.label">🌙 מצב לילה</div>
+        <div class="setting-row-sub" data-i18n="settings.darkMode.sub">תצוגה כהה לעיניים</div>
       </div>
       <div class="setting-toggle" id="s-dark"></div>
     </div>
     <div class="setting-row" onclick="toggleSetting('animations')">
       <div>
-        <div class="setting-row-label">✨ אנימציות</div>
-        <div class="setting-row-sub">מעברים ואפקטים חזותיים</div>
+        <div class="setting-row-label" data-i18n="settings.animations.label">✨ אנימציות</div>
+        <div class="setting-row-sub" data-i18n="settings.animations.sub">מעברים ואפקטים חזותיים</div>
       </div>
       <div class="setting-toggle" id="s-animations"></div>
     </div>
 
-    <div class="drawer-section-title">אינטראקציה</div>
+    <div class="drawer-section-title" data-i18n="settings.sectionInteract">אינטראקציה</div>
     <div class="setting-row" onclick="toggleSetting('haptic')">
       <div>
-        <div class="setting-row-label">📳 רטט (Haptic)</div>
-        <div class="setting-row-sub">משוב פיזי בלחיצות</div>
+        <div class="setting-row-label" data-i18n="settings.haptic.label">📳 רטט (Haptic)</div>
+        <div class="setting-row-sub" data-i18n="settings.haptic.sub">משוב פיזי בלחיצות</div>
       </div>
       <div class="setting-toggle" id="s-haptic"></div>
     </div>
     <div class="setting-row" onclick="toggleSetting('pullToRefresh')">
       <div>
-        <div class="setting-row-label">↕️ משיכה לרענון</div>
-        <div class="setting-row-sub">גרור למטה מהחלק העליון לרענן</div>
+        <div class="setting-row-label" data-i18n="settings.pullRefresh.label">↕️ משיכה לרענון</div>
+        <div class="setting-row-sub" data-i18n="settings.pullRefresh.sub">גרור למטה מהחלק העליון לרענן</div>
       </div>
       <div class="setting-toggle" id="s-pullToRefresh"></div>
     </div>
 
-    <div class="drawer-section-title">נגישות</div>
+    <div class="drawer-section-title" data-i18n="settings.sectionAccess">נגישות</div>
     <div class="setting-row" onclick="toggleSetting('largeText')">
       <div>
-        <div class="setting-row-label">🔠 טקסט גדול</div>
-        <div class="setting-row-sub">הגדלת גודל הפונט</div>
+        <div class="setting-row-label" data-i18n="settings.largeText.label">🔠 טקסט גדול</div>
+        <div class="setting-row-sub" data-i18n="settings.largeText.sub">הגדלת גודל הפונט</div>
       </div>
       <div class="setting-toggle" id="s-largeText"></div>
     </div>
 
-    <div class="drawer-section-title">עזרה</div>
+    <div class="drawer-section-title" data-i18n="settings.sectionHelp">עזרה</div>
 
     <div class="help-item" id="help-home">
       <div class="help-item-header" onclick="toggleHelp('help-home')">
         <div class="help-item-left">
           <span class="help-item-icon">🏠</span>
-          <span class="help-item-title">מסך הבית</span>
+          <span class="help-item-title" data-i18n="help.home.title">מסך הבית</span>
         </div>
         <span class="help-item-arrow">▼</span>
       </div>
-      <div class="help-item-body">
+      <div class="help-item-body" data-i18n-html="help.home.body">
         מסך הבית מציג סיכום מהיר של הפעילות שלך:
         <ul>
           <li><strong>ציון אחרון</strong> — הציון שקיבלת בחידון האחרון</li>
@@ -863,7 +863,7 @@
           <li><strong>מועדפים</strong> — מונחים ששמרת לחזרה</li>
           <li><strong>מושגים חלשים</strong> — מושגים שטעית בהם יותר מפעם</li>
         </ul>
-        <div class="help-tip">💡 הבאדג' 🔥 בכותרת מציג כמה ימים ברצף למדת</div>
+        <div class="help-tip" data-i18n="help.home.tip">💡 הבאדג' 🔥 בכותרת מציג כמה ימים ברצף למדת</div>
       </div>
     </div>
 
@@ -871,11 +871,11 @@
       <div class="help-item-header" onclick="toggleHelp('help-dict')">
         <div class="help-item-left">
           <span class="help-item-icon">📖</span>
-          <span class="help-item-title">מילון מונחים</span>
+          <span class="help-item-title" data-i18n="help.dict.title">מילון מונחים</span>
         </div>
         <span class="help-item-arrow">▼</span>
       </div>
-      <div class="help-item-body">
+      <div class="help-item-body" data-i18n-html="help.dict.body">
         <ul>
           <li>לחץ על <strong>פרק</strong> כדי לפתוח/לסגור את המונחים שבו</li>
           <li>לחץ ⭐ ליד מונח כדי לשמור אותו ל<strong>מועדפים</strong></li>
@@ -890,11 +890,11 @@
       <div class="help-item-header" onclick="toggleHelp('help-quiz')">
         <div class="help-item-left">
           <span class="help-item-icon">🏆</span>
-          <span class="help-item-title">חידון</span>
+          <span class="help-item-title" data-i18n="help.quiz.title">חידון</span>
         </div>
         <span class="help-item-arrow">▼</span>
       </div>
-      <div class="help-item-body">
+      <div class="help-item-body" data-i18n-html="help.quiz.body">
         <strong>מצבי חידון:</strong>
         <ul>
           <li><strong>רגיל</strong> — 8 שאלות מהפרק שבחרת</li>
@@ -903,7 +903,7 @@
           <li><strong>🎲 חופשי</strong> — 8 שאלות מכל הפרקים יחד</li>
         </ul>
         בסיום החידון יוצגו המושגים שדורשים חזרה. כל מושג מופיע פעם אחת בלבד בשאלון.
-        <div class="help-tip">💡 לחץ ✕ צא בסרגל העליון ליציאה מחידון באמצע</div>
+        <div class="help-tip" data-i18n="help.quiz.tip">💡 לחץ ✕ צא בסרגל העליון ליציאה מחידון באמצע</div>
       </div>
     </div>
 
@@ -911,11 +911,11 @@
       <div class="help-item-header" onclick="toggleHelp('help-audio')">
         <div class="help-item-left">
           <span class="help-item-icon">🎵</span>
-          <span class="help-item-title">נגן שמע</span>
+          <span class="help-item-title" data-i18n="help.audio.title">נגן שמע</span>
         </div>
         <span class="help-item-arrow">▼</span>
       </div>
-      <div class="help-item-body">
+      <div class="help-item-body" data-i18n-html="help.audio.body">
         <ul>
           <li>לחץ <strong>פתח ➕</strong> להוספת תיקיית מוזיקה מהמכשיר</li>
           <li>ניתן להוסיף <strong>מספר תיקיות</strong> — כל אחת תופיע כפלייליסט נפרד</li>
@@ -924,7 +924,7 @@
           <li>כפתורי <strong>0.75× עד 1.5×</strong> שינוי מהירות השמעה</li>
           <li>לחץ על פרטי השיר בסרגל התחתון לפתיחת הנגן המלא</li>
         </ul>
-        <div class="help-tip">💡 הנגן ממשיך מאותה נקודה גם לאחר סגירת האפליקציה</div>
+        <div class="help-tip" data-i18n="help.audio.tip">💡 הנגן ממשיך מאותה נקודה גם לאחר סגירת האפליקציה</div>
       </div>
     </div>
 
@@ -932,18 +932,18 @@
       <div class="help-item-header" onclick="toggleHelp('help-pwa')">
         <div class="help-item-left">
           <span class="help-item-icon">📲</span>
-          <span class="help-item-title">התקנה ועבודה אופליין</span>
+          <span class="help-item-title" data-i18n="help.pwa.title">התקנה ועבודה אופליין</span>
         </div>
         <span class="help-item-arrow">▼</span>
       </div>
-      <div class="help-item-body">
+      <div class="help-item-body" data-i18n-html="help.pwa.body">
         <ul>
           <li>לחץ <strong>התקן</strong> בבאנר שמופיע בתחתית כדי להוסיף את האפליקציה למסך הבית</li>
           <li>לאחר ההתקנה, האפליקציה פועלת <strong>ללא אינטרנט</strong></li>
           <li>באנר אדום יופיע כשאין חיבור רשת</li>
           <li>כשיש גרסה חדשה — יוצג באנר "עדכן עכשיו" בתחתית</li>
         </ul>
-        <div class="help-tip">💡 לאיפוס נתונים — לחץ על מספר הגרסה בכותרת</div>
+        <div class="help-tip" data-i18n="help.pwa.tip">💡 לאיפוס נתונים — לחץ על מספר הגרסה בכותרת</div>
       </div>
     </div>
 
@@ -951,11 +951,11 @@
       <div class="help-item-header" onclick="toggleHelp('help-gestures')">
         <div class="help-item-left">
           <span class="help-item-icon">👆</span>
-          <span class="help-item-title">מחוות מגע</span>
+          <span class="help-item-title" data-i18n="help.gestures.title">מחוות מגע</span>
         </div>
         <span class="help-item-arrow">▼</span>
       </div>
-      <div class="help-item-body">
+      <div class="help-item-body" data-i18n-html="help.gestures.body">
         <ul>
           <li><strong>החלקה שמאלה/ימינה</strong> — מעבר בין טאבים</li>
           <li><strong>החלקה למטה</strong> על הנגן המלא — סגירת הנגן</li>
@@ -971,55 +971,55 @@
 <!-- ══ RESET MODAL ══ -->
 <div id="reset-backdrop" onclick="onResetBackdropClick(event)">
   <div id="reset-modal" role="dialog" aria-modal="true">
-    <div class="reset-modal-title">🔧 הגדרות ואיפוס</div>
-    <p class="reset-modal-text">הגדרות תצוגה ואיפוס נתונים.</p>
+    <div class="reset-modal-title" data-i18n="reset.title">🔧 הגדרות ואיפוס</div>
+    <p class="reset-modal-text" data-i18n="reset.subtitle">הגדרות תצוגה ואיפוס נתונים.</p>
 
     <div class="dark-toggle-row" onclick="toggleDarkMode()">
       <div>
-        <div class="dark-toggle-label">🌙 מצב לילה</div>
-        <div class="dark-toggle-sub">תצוגה כהה לעיניים</div>
+        <div class="dark-toggle-label" data-i18n="reset.darkMode.label">🌙 מצב לילה</div>
+        <div class="dark-toggle-sub" data-i18n="reset.darkMode.sub">תצוגה כהה לעיניים</div>
       </div>
       <div class="toggle-switch" id="dark-switch"></div>
     </div>
 
-    <p class="reset-modal-text" style="margin-bottom:12px;">בחר אילו נתונים למחוק:</p>
+    <p class="reset-modal-text" style="margin-bottom:12px;" data-i18n="reset.deletePrompt">בחר אילו נתונים למחוק:</p>
     <div class="reset-checkboxes">
       <label class="reset-checkbox-item">
         <input type="checkbox" id="resetFavs" checked>
         <div>
-          <div class="reset-checkbox-label">מועדפים ⭐</div>
-          <div class="reset-checkbox-sub">כל המונחים שסומנו כמועדפים</div>
+          <div class="reset-checkbox-label" data-i18n="reset.favs.label">מועדפים ⭐</div>
+          <div class="reset-checkbox-sub" data-i18n="reset.favs.sub">כל המונחים שסומנו כמועדפים</div>
         </div>
       </label>
       <label class="reset-checkbox-item">
         <input type="checkbox" id="resetAudio">
         <div>
-          <div class="reset-checkbox-label">מצב נגן שמע 🎵</div>
-          <div class="reset-checkbox-sub">פלייליסט אחרון, עמדה בשיר, עוצמה</div>
+          <div class="reset-checkbox-label" data-i18n="reset.audio.label">מצב נגן שמע 🎵</div>
+          <div class="reset-checkbox-sub" data-i18n="reset.audio.sub">פלייליסט אחרון, עמדה בשיר, עוצמה</div>
         </div>
       </label>
       <label class="reset-checkbox-item">
         <input type="checkbox" id="resetCache">
         <div>
-          <div class="reset-checkbox-label">קאש ו-Service Worker 🔄</div>
-          <div class="reset-checkbox-sub">מאלץ הורדה מחדש בטעינה הבאה</div>
+          <div class="reset-checkbox-label" data-i18n="reset.cache.label">קאש ו-Service Worker 🔄</div>
+          <div class="reset-checkbox-sub" data-i18n="reset.cache.sub">מאלץ הורדה מחדש בטעינה הבאה</div>
         </div>
       </label>
     </div>
     <div class="reset-modal-buttons">
-      <button class="reset-modal-btn cancel" onclick="closeResetModal()">ביטול</button>
-      <button class="reset-modal-btn danger" onclick="doReset()">מחק נבחרים</button>
+      <button class="reset-modal-btn cancel" onclick="closeResetModal()" data-i18n="reset.cancelBtn">ביטול</button>
+      <button class="reset-modal-btn danger" onclick="doReset()" data-i18n="reset.deleteBtn">מחק נבחרים</button>
     </div>
   </div>
 </div>
 
 <!-- ══ NETWORK BANNER ══ -->
-<div id="network-banner">📡 אין חיבור לאינטרנט</div>
+<div id="network-banner" data-i18n="network.offlineBanner">📡 אין חיבור לאינטרנט</div>
 
 <!-- ══ UPDATE PROMPT ══ -->
 <div id="update-prompt">
-  <span id="update-prompt-text">גרסה חדשה זמינה!</span>
-  <button id="update-btn" onclick="applyUpdate()">עדכן עכשיו</button>
+  <span id="update-prompt-text" data-i18n="network.updateAvailable">גרסה חדשה זמינה!</span>
+  <button id="update-btn" onclick="applyUpdate()" data-i18n="network.updateBtn">עדכן עכשיו</button>
   <button id="update-dismiss" onclick="dismissUpdate()" aria-label="סגור">✕</button>
 </div>
 
@@ -1027,21 +1027,21 @@
 <div id="install-banner">
   <div id="install-banner-icon">🏛</div>
   <div id="install-banner-text">
-    <div id="install-banner-title">התקן את האפליקציה</div>
-    <div id="install-banner-sub">גישה מהירה וגלישה ללא אינטרנט</div>
+    <div id="install-banner-title" data-i18n="pwa.bannerTitle">התקן את האפליקציה</div>
+    <div id="install-banner-sub" data-i18n="pwa.bannerSub">גישה מהירה וגלישה ללא אינטרנט</div>
   </div>
-  <button id="install-btn" onclick="triggerInstall()">התקן</button>
+  <button id="install-btn" onclick="triggerInstall()" data-i18n="pwa.installBtn">התקן</button>
   <button id="install-dismiss" onclick="dismissInstall()" aria-label="סגור">✕</button>
 </div>
 
 <!-- ══ QUIT QUIZ MODAL ══ -->
 <div id="quit-backdrop" onclick="onQuitBackdropClick(event)">
   <div id="quit-modal" role="dialog" aria-modal="true">
-    <div class="quit-title">🚪 יציאה מהחידון</div>
+    <div class="quit-title" data-i18n="quit.title">🚪 יציאה מהחידון</div>
     <div class="quit-sub">הצלחת לענות על <strong id="quit-progress-text"></strong>. ההתקדמות לא תישמר.</div>
     <div class="quit-btns">
-      <button class="quit-btn cancel" onclick="closeQuitModal()">המשך חידון</button>
-      <button class="quit-btn danger" onclick="confirmQuit()">צא מהחידון</button>
+      <button class="quit-btn cancel" onclick="closeQuitModal()" data-i18n="quit.continueBtn">המשך חידון</button>
+      <button class="quit-btn danger" onclick="confirmQuit()" data-i18n="quit.quitBtn">צא מהחידון</button>
     </div>
   </div>
 </div>
@@ -1052,24 +1052,24 @@
 <div id="main">
   <div id="loader">
     <div class="spinner"></div>
-    <div>טוען נתונים...</div>
+    <div data-i18n="app.loading">טוען נתונים...</div>
   </div>
 
 
   <!-- ══ HOME / DASHBOARD ══ -->
   <div id="screen-home" class="screen active">
     <div class="dash-greeting">
-      <div class="dash-greeting-name">שלום! 👋</div>
-      <div class="dash-greeting-sub">מוכן ללמוד אזרחות?</div>
+      <div class="dash-greeting-name" data-i18n="dashboard.greeting">שלום! 👋</div>
+      <div class="dash-greeting-sub" data-i18n="dashboard.greetingSub">מוכן ללמוד אזרחות?</div>
       <div class="dash-streak-row">
-        <div class="dash-streak-pill" id="dash-streak-pill">🔥 <span id="dash-streak-num">0</span> ימים ברצף</div>
+        <div class="dash-streak-pill" id="dash-streak-pill">🔥 <span id="dash-streak-num">0</span> <span data-i18n="dashboard.streakDays">ימים ברצף</span></div>
       </div>
     </div>
 
     <div id="dash-now-playing" class="dash-now-playing" onclick="switchTab('audio')">
       <div class="dash-np-icon">🎵</div>
       <div class="dash-np-text">
-        <div class="dash-np-label">מתנגן עכשיו</div>
+        <div class="dash-np-label" data-i18n="dashboard.nowPlaying">מתנגן עכשיו</div>
         <div class="dash-np-title" id="dash-np-title">—</div>
       </div>
       <span style="color:var(--muted);font-size:1.2rem;">›</span>
@@ -1078,27 +1078,27 @@
     <div class="dash-cards">
       <div class="dash-card accent" onclick="switchTab('quiz')">
         <div class="dash-card-icon">🏆</div>
-        <div class="dash-card-label">ציון אחרון</div>
+        <div class="dash-card-label" data-i18n="dashboard.lastScore.label">ציון אחרון</div>
         <div class="dash-card-value" id="dash-last-score">—</div>
-        <div class="dash-card-sub"  id="dash-last-chapter">טרם שוחק</div>
+        <div class="dash-card-sub"  id="dash-last-chapter" data-i18n="dashboard.lastScore.noPlay">טרם שוחק</div>
       </div>
       <div class="dash-card" onclick="switchTab('quiz')">
         <div class="dash-card-icon">📊</div>
-        <div class="dash-card-label">פרקים</div>
+        <div class="dash-card-label" data-i18n="dashboard.chapters.label">פרקים</div>
         <div class="dash-card-value" id="dash-chapters-done">0</div>
-        <div class="dash-card-sub">הושלמו</div>
+        <div class="dash-card-sub" data-i18n="dashboard.chapters.sub">הושלמו</div>
       </div>
       <div class="dash-card" onclick="switchTab('dict')">
         <div class="dash-card-icon">⭐</div>
-        <div class="dash-card-label">מועדפים</div>
+        <div class="dash-card-label" data-i18n="dashboard.favs.label">מועדפים</div>
         <div class="dash-card-value" id="dash-favs-count">0</div>
-        <div class="dash-card-sub">מונחים שמורים</div>
+        <div class="dash-card-sub" data-i18n="dashboard.favs.sub">מונחים שמורים</div>
       </div>
       <div class="dash-card" onclick="switchTab('dict')">
         <div class="dash-card-icon">📚</div>
-        <div class="dash-card-label">מושגים חלשים</div>
+        <div class="dash-card-label" data-i18n="dashboard.weak.label">מושגים חלשים</div>
         <div class="dash-card-value" id="dash-weak-count">0</div>
-        <div class="dash-card-sub">לחזרה</div>
+        <div class="dash-card-sub" data-i18n="dashboard.weak.sub">לחזרה</div>
       </div>
     </div>
 
@@ -1106,24 +1106,24 @@
       <div class="dash-action-btn" onclick="startFreeQuiz()">
         <div class="dash-action-btn-icon">🎲</div>
         <div>
-          <div class="dash-action-btn-label">תרגול חופשי</div>
-          <div class="dash-action-btn-sub">8 שאלות מכל הפרקים</div>
+          <div class="dash-action-btn-label" data-i18n="dashboard.freeQuiz.label">תרגול חופשי</div>
+          <div class="dash-action-btn-sub" data-i18n="dashboard.freeQuiz.sub">8 שאלות מכל הפרקים</div>
         </div>
-        <span class="dash-tag">חדש</span>
+        <span class="dash-tag" data-i18n="dashboard.freeQuiz.tag">חדש</span>
       </div>
       <div class="dash-action-btn" id="dash-retry-weak-btn" onclick="startWeakQuiz()" style="display:none">
         <div class="dash-action-btn-icon">🔁</div>
         <div>
-          <div class="dash-action-btn-label">חידון חוזר</div>
-          <div class="dash-action-btn-sub" id="dash-retry-sub">תרגל את המושגים שפספסת</div>
+          <div class="dash-action-btn-label" data-i18n="dashboard.retryWeak.label">חידון חוזר</div>
+          <div class="dash-action-btn-sub" id="dash-retry-sub" data-i18n="dashboard.retryWeak.sub">תרגל את המושגים שפספסת</div>
         </div>
-        <span class="dash-tag" style="background:#fde68a;color:#78350f;">לשיפור</span>
+        <span class="dash-tag" style="background:#fde68a;color:#78350f;" data-i18n="dashboard.retryWeak.tag">לשיפור</span>
       </div>
       <div class="dash-action-btn" onclick="startFreeQuiz('speed')">
         <div class="dash-action-btn-icon">⚡</div>
         <div>
-          <div class="dash-action-btn-label">חידון מהיר</div>
-          <div class="dash-action-btn-sub">30 שניות לשאלה, בונוס מהירות</div>
+          <div class="dash-action-btn-label" data-i18n="dashboard.speedQuiz.label">חידון מהיר</div>
+          <div class="dash-action-btn-sub" data-i18n="dashboard.speedQuiz.sub">30 שניות לשאלה, בונוס מהירות</div>
         </div>
       </div>
     </div>
@@ -1132,23 +1132,23 @@
   <!-- ══ DICTIONARY ══ -->
   <div id="screen-dict" class="screen">
     <div id="flash-card">
-      <div class="flash-term"    id="flash-term">הגרל מונח לתרגול</div>
+      <div class="flash-term"    id="flash-term" data-i18n="dict.flashPlaceholder">הגרל מונח לתרגול</div>
       <div class="flash-chapter" id="flash-chapter"></div>
       <div class="flash-def"     id="flash-def"></div>
       <div class="flash-btns">
-        <button class="flash-btn draw"   onclick="drawTerm()">🎲 הגרל</button>
-        <button class="flash-btn reveal" onclick="revealTerm()">👁 חשוף</button>
+        <button class="flash-btn draw"   onclick="drawTerm()" data-i18n="dict.drawBtn">🎲 הגרל</button>
+        <button class="flash-btn reveal" onclick="revealTerm()" data-i18n="dict.revealBtn">👁 חשוף</button>
       </div>
     </div>
 
     <div class="dict-toolbar">
       <div id="dict-search-wrap">
         <span style="color:var(--muted);font-size:.95rem">🔍</span>
-        <input type="search" id="dict-search" placeholder="חפש מונח..." oninput="onSearch(this.value)">
+        <input type="search" id="dict-search" placeholder="חפש מונח..." data-i18n-placeholder="dict.searchPlaceholder" oninput="onSearch(this.value)">
         <button id="clear-search" onclick="clearSearch()">✕</button>
       </div>
-      <button class="dict-icon-btn" id="fav-filter-btn" title="מועדפים בלבד" onclick="toggleFavFilter()">⭐</button>
-      <button class="dict-icon-btn" id="toggle-all-btn" title="פתח / סגור הכל" onclick="toggleAllSections()">⇕</button>
+      <button class="dict-icon-btn" id="fav-filter-btn" title="מועדפים בלבד" data-i18n-title="dict.favFilterTitle" onclick="toggleFavFilter()">⭐</button>
+      <button class="dict-icon-btn" id="toggle-all-btn" title="פתח / סגור הכל" data-i18n-title="dict.expandTitle" onclick="toggleAllSections()">⇕</button>
     </div>
 
     <div id="dict-content"></div>
@@ -1158,7 +1158,7 @@
   <div id="screen-quiz" class="screen">
 
     <div id="quiz-menu" class="screen active">
-      <div class="section-label">בחר פרק לתרגול</div>
+      <div class="section-label" data-i18n="quiz.selectChapter">בחר פרק לתרגול</div>
       <div class="quiz-mode-row">
         <div class="mode-chip active" id="chip-normal" onclick="setQuizMode('normal')">
           <span class="chip-dot"></span>רגיל
@@ -1186,7 +1186,7 @@
           <div class="feedback-title"   id="feedback-title"></div>
           <div class="feedback-concept" id="feedback-concept"></div>
         </div>
-        <button class="primary-btn" id="next-btn" style="display:none" onclick="nextQuestion()">המשך ←</button>
+        <button class="primary-btn" id="next-btn" style="display:none" onclick="nextQuestion()" data-i18n="quiz.nextBtn">המשך ←</button>
       </div>
     </div>
 
@@ -1199,15 +1199,15 @@
           <div class="result-bar" id="result-bar" style="width:0%"></div>
         </div>
         <div class="result-weak-wrap" id="result-weak-wrap" style="display:none">
-          <div class="result-weak-title">📌 מושגים לחזרה:</div>
+          <div class="result-weak-title" data-i18n="quiz.weakTitle">📌 מושגים לחזרה:</div>
           <div class="weak-section">
             <div class="weak-chips" id="result-weak-chips"></div>
           </div>
         </div>
         <div id="result-bonus-row" style="display:none;text-align:center;font-size:.85rem;font-weight:700;color:var(--gold);margin:8px 0;">⚡ בונוס מהירות: +<span id="result-bonus">0</span> נקודות</div>
-        <button class="primary-btn" onclick="backToChapters()">בחר פרק אחר</button>
-        <button class="primary-btn secondary" id="retry-btn">🔁 שחק שוב אותו פרק</button>
-        <button class="primary-btn secondary" id="retry-weak-btn" style="display:none" onclick="startWeakQuiz()">🔁 תרגל מושגים שפספסת</button>
+        <button class="primary-btn" onclick="backToChapters()" data-i18n="quiz.backBtn">בחר פרק אחר</button>
+        <button class="primary-btn secondary" id="retry-btn" data-i18n="quiz.retryBtn">🔁 שחק שוב אותו פרק</button>
+        <button class="primary-btn secondary" id="retry-weak-btn" style="display:none" onclick="startWeakQuiz()" data-i18n="quiz.retryWeakBtn">🔁 תרגל מושגים שפספסת</button>
       </div>
     </div>
 
@@ -1225,19 +1225,19 @@
           <div class="audio-folder-card restore-card" style="opacity:.75">
             <div class="audio-folder-icon">🔄</div>
             <div class="audio-folder-text">
-              <div class="audio-folder-title" id="restore-folder-name">מאשר גישה לתיקיות...</div>
-              <div class="audio-folder-sub">עבור לטאב הנגן לטעינה אוטומטית</div>
+              <div class="audio-folder-title" id="restore-folder-name" data-i18n="audio.restoreTitle">מאשר גישה לתיקיות...</div>
+              <div class="audio-folder-sub" data-i18n="audio.restoreSub">עבור לטאב הנגן לטעינה אוטומטית</div>
             </div>
-            <button class="audio-open-btn" onclick="restoreSavedFolders()">טען ידנית</button>
+            <button class="audio-open-btn" onclick="restoreSavedFolders()" data-i18n="audio.restoreBtn">טען ידנית</button>
           </div>
         </div>
         <div class="audio-folder-card">
           <div class="audio-folder-icon">➕</div>
           <div class="audio-folder-text">
-            <div class="audio-folder-title">הוסף תיקיית שירים</div>
-            <div class="audio-folder-sub">כל תת-תיקייה תהפוך לפלייליסט</div>
+            <div class="audio-folder-title" data-i18n="audio.addFolderTitle">הוסף תיקיית שירים</div>
+            <div class="audio-folder-sub" data-i18n="audio.addFolderSub">כל תת-תיקייה תהפוך לפלייליסט</div>
           </div>
-          <button class="audio-open-btn" onclick="pickLocalFolder()">פתח</button>
+          <button class="audio-open-btn" onclick="pickLocalFolder()" data-i18n="audio.addFolderBtn">פתח</button>
         </div>
         <div id="loaded-folders-list"></div>
         <div id="local-playlists-list"></div>
@@ -1248,7 +1248,7 @@
     <!-- ── Sub-screen: Track list ── -->
     <div id="audio-tracklist" class="audio-subscreen">
       <div class="tracklist-topbar">
-        <button class="audio-back-btn" onclick="showPlaylists()">← חזרה</button>
+        <button class="audio-back-btn" onclick="showPlaylists()" data-i18n="audio.backBtn">← חזרה</button>
       </div>
       <div class="audio-playlist-header">
         <div class="audio-playlist-art" id="pl-art">🎵</div>
@@ -1276,21 +1276,21 @@
       </div>
     </div>
     <div class="sp-controls">
-      <button class="sp-btn" onclick="nextTrack()" title="הבא">⏭</button>
-      <button class="sp-btn sp-skip-sm" onclick="skipForward()" title="קדימה 15 שניות">
+      <button class="sp-btn" onclick="nextTrack()" title="הבא" data-i18n-title="audio.nextTitle">⏭</button>
+      <button class="sp-btn sp-skip-sm" onclick="skipForward()" title="קדימה 15 שניות" data-i18n-title="audio.skipFwdTitle">
         <svg class="skip-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 5V2l4 4-4 4V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z" fill="currentColor"/>
           <text x="12" y="14.5" text-anchor="middle" font-size="6" font-weight="700" fill="currentColor" font-family="Heebo,sans-serif">15</text>
         </svg>
       </button>
       <button class="sp-btn sp-play-btn" id="sp-play-btn" onclick="togglePlay()">▶</button>
-      <button class="sp-btn sp-skip-sm" onclick="skipBack()" title="אחורה 15 שניות">
+      <button class="sp-btn sp-skip-sm" onclick="skipBack()" title="אחורה 15 שניות" data-i18n-title="audio.skipBackTitle">
         <svg class="skip-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M12 5V2L8 6l4 4V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z" fill="currentColor"/>
           <text x="12" y="14.5" text-anchor="middle" font-size="6" font-weight="700" fill="currentColor" font-family="Heebo,sans-serif">15</text>
         </svg>
       </button>
-      <button class="sp-btn" onclick="prevTrack()" title="הקודם">⏮</button>
+      <button class="sp-btn" onclick="prevTrack()" title="הקודם" data-i18n-title="audio.prevTitle">⏮</button>
     </div>
   </div>
 
@@ -1303,7 +1303,7 @@
     </div>
 
     <div class="fp-meta">
-      <div class="fp-title"  id="fp-title">בחר שיר להשמעה</div>
+      <div class="fp-title"  id="fp-title" data-i18n="audio.defaultTrack">בחר שיר להשמעה</div>
       <div class="fp-artist" id="fp-artist">—</div>
     </div>
 
@@ -1344,7 +1344,7 @@
       <button class="fp-speed-btn" onclick="setPlaybackSpeed(1.5)">1.5×</button>
     </div>
 
-    <button class="fp-stop-btn" onclick="stopAudio()" title="עצור">⏹ עצור</button>
+    <button class="fp-stop-btn" onclick="stopAudio()" title="עצור" data-i18n="audio.stopBtn" data-i18n-title="audio.stopTitle">⏹ עצור</button>
   </div>
 
 </div>
@@ -1996,7 +1996,7 @@ function buildTermsTable(terms, hl) {
     if (favOnly && !isFav) row.classList.add('fav-only-hidden');
 
     row.innerHTML = `
-      <div class="term-cell-star" onclick="toggleFav('${t.name.replace(/'/g,"\\'")}', this)" title="${isFav?'הסר ממועדפים':'הוסף למועדפים'}">
+      <div class="term-cell-star" onclick="toggleFav('${t.name.replace(/'/g,"\\'")}', this)" title="${isFav?S('dict.removeFav'):S('dict.addFav')}">
         <span class="term-star-icon${isFav?' active':''}">★</span>
       </div>
       <div class="term-cell-name">${hlText(t.name, hl)}</div>
@@ -2032,7 +2032,7 @@ function toggleFavFilter() {
 
 function applyFavFilter() {
   if (favOnly && favTerms.size === 0) {
-    $('dict-content').innerHTML = '<div class="fav-empty">⭐ עדיין אין מועדפים<br><small>לחץ על ★ ליד מונח כדי להוסיפו</small></div>';
+    $('dict-content').innerHTML = `<div class="fav-empty">⭐ ${S('dict.noFavs.title')}<br><small>${S('dict.noFavs.sub')}</small></div>`;
     return;
   }
   // Re-render if we had previously shown the empty state
@@ -2214,11 +2214,11 @@ function handleAnswer(selected, q, clickedBtn) {
 
   const fb = $('feedback-box');
   fb.classList.add('show', isCorrect ? 'ok' : 'err');
-  $('feedback-title').textContent = isCorrect ? '✅ נכון!' : `❌ לא נכון — התשובה: ${correctVal}`;
+  $('feedback-title').textContent = isCorrect ? S('quiz.correctFeedback') : `${S('quiz.wrongFeedback')} ${correctVal}`;
   $('feedback-concept').innerHTML = `<strong>${conceptName}:</strong> ${def}`;
 
   $('next-btn').style.display   = 'block';
-  $('next-btn').textContent     = quizIdx+1 < quizQuestions.length ? 'המשך ←' : 'לסיכום ←';
+  $('next-btn').textContent     = quizIdx+1 < quizQuestions.length ? S('quiz.nextBtn') : S('quiz.summaryBtn');
 }
 
 function nextQuestion() {
@@ -2237,7 +2237,7 @@ function showResults() {
   const emoji = pct>=90?'🏆':pct>=70?'🎉':pct>=50?'👍':'💪';
   $('result-emoji').textContent = emoji;
   $('result-score').innerHTML   = `${pct}<span>%</span>`;
-  $('result-sub').textContent   = `ענית נכון על ${quizCorrect} מתוך ${quizQuestions.length} שאלות בפרק "${quizChapterName}"`;
+  $('result-sub').textContent   = `${S('quiz.quitProgress')} ${quizCorrect} ${S('quiz.quitOf')} ${quizQuestions.length} ${S('quiz.quitQuestions')} בפרק "${quizChapterName}"`;
   setTimeout(() => { $('result-bar').style.width = pct+'%'; }, 80);
   $('retry-btn').onclick = () => startQuiz(quizChapterName);
 }
@@ -2391,7 +2391,7 @@ async function loadFilesFromHandle(handle, additive = false) {
     return;
   }
 
-  if (!Object.keys(groups).length) { showToast('לא נמצאו קבצי אודיו', 'warn'); return; }
+  if (!Object.keys(groups).length) { showToast(S('toast.noAudioFiles'), 'warn'); return; }
 
   // Remove old playlists from this root folder, keep others
   if (additive) {
@@ -2428,9 +2428,9 @@ async function pickLocalFolder() {
     await addDirHandle(handle);
     $('local-restore-prompt').style.display = 'none';
     await loadFilesFromHandle(handle, true);
-    showToast(`📂 "${handle.name}" נוספה`, 'ok');
+    showToast(`📂 "${handle.name}" ${S('toast.folderAdded')}`, 'ok');
   } catch(e) {
-    if (e.name !== 'AbortError') showToast('⚠️ לא ניתן לגשת לתיקייה', 'warn');
+    if (e.name !== 'AbortError') showToast(S('toast.folderError'), 'warn');
   }
 }
 
@@ -2462,7 +2462,7 @@ function _updatePendingBadge() {
   if (!prompt) return;
   if (_pendingHandles.length > 0) {
     const names = _pendingHandles.map(h => h.name).join(', ');
-    $('restore-folder-name').textContent = `🔄 מאשר גישה ל: ${names}`;
+    $('restore-folder-name').textContent = `🔄 ${S('audio.restoreTitle').replace('...','')}: ${names}`;
     prompt.style.display = '';
   } else {
     prompt.style.display = 'none';
@@ -2535,7 +2535,7 @@ function renderLoadedFolders() {
 // Fallback for browsers without File System Access API
 async function handleFolderPickFallback(files) {
   const fileArr = Array.from(files).filter(f => /\.(mp3|wav|aac|m4a|ogg|flac)$/i.test(f.name));
-  if (!fileArr.length) { showToast('לא נמצאו קבצי אודיו'); return; }
+  if (!fileArr.length) { showToast(S('toast.noAudioFiles')); return; }
   const groups = {};
   fileArr.forEach(f => {
     const parts  = (f.webkitRelativePath || f.name).split('/');
@@ -2600,18 +2600,18 @@ function renderLocalPlaylists() {
 // ════════════════════════════════════════════════════════════
 //  APP CONSTANTS & VERSION
 // ════════════════════════════════════════════════════════════
-const APP_VERSION = '1.8';
+const APP_VERSION = '1.9';
 
 // ── Message catalogue (6.3.1) ──────────────────────────────
 const MSG = {
-  SW_REG_SUCCESS : { text: '✅ האפליקציה מוכנה לעבודה במצב אופליין',   type: 'ok',   duration: 3500 },
-  APP_REMOVED    : { text: '✅ כל נתוני האפליקציה הוסרו',               type: 'ok',   duration: 3500 },
-  CACHE_CLEARED  : { text: '✅ המטמון נוקה בהצלחה',                     type: 'ok',   duration: 3500 },
-  GAME_SAVED     : { text: '✅ ההתקדמות נשמרה',                          type: 'ok',   duration: 3500 },
-  SW_FAILED      : { text: '⚠️ כשל ברישום מערכת האופליין',              type: 'err',  duration: 7000 },
-  STORAGE_FULL   : { text: '⚠️ שגיאה: זיכרון הדפדפן מלא',              type: 'err',  duration: 7000 },
+  SW_REG_SUCCESS : { get text() { return S('toast.swRegSuccess'); },   type: 'ok',   duration: 3500 },
+  APP_REMOVED    : { get text() { return S('toast.appRemoved'); },               type: 'ok',   duration: 3500 },
+  CACHE_CLEARED  : { get text() { return S('toast.cacheCleared'); },                     type: 'ok',   duration: 3500 },
+  GAME_SAVED     : { get text() { return S('toast.gameSaved'); },                          type: 'ok',   duration: 3500 },
+  SW_FAILED      : { get text() { return S('toast.swFailed'); },              type: 'err',  duration: 7000 },
+  STORAGE_FULL   : { get text() { return S('toast.storageFull'); },              type: 'err',  duration: 7000 },
   UPDATE_AVAIL   : (v) => ({ text: `ℹ️ גרסה חדשה זמינה (v${v})`,       type: 'info', duration: 3500 }),
-  OFFLINE_MODE   : { text: 'ℹ️ אתה עובד כעת במצב לא מקוון',            type: 'info', duration: 3500 },
+  OFFLINE_MODE   : { get text() { return S('toast.offlineMode'); },            type: 'info', duration: 3500 },
   GENERAL_ERROR  : (msg) => ({ text: `⚠️ שגיאה: ${msg}`,               type: 'err',  duration: 7000 }),
 };
 
@@ -2712,7 +2712,7 @@ function initNetworkMonitoring() {
   function update() {
     if (navigator.onLine) {
       banner.classList.remove('show');
-      showToast('✅ חיבור לאינטרנט שוחזר', 'ok');
+      showToast(S('toast.onlineRestored'), 'ok');
     } else {
       banner.classList.add('show');
       showToast(MSG.OFFLINE_MODE);
@@ -2726,7 +2726,7 @@ function initNetworkMonitoring() {
   const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
   if (conn) {
     const slow = conn.saveData || ['slow-2g','2g'].includes(conn.effectiveType);
-    if (slow) showToast('⚠️ חיבור איטי — חלק מהתוכן עשוי לא להיטען', 'warn', 5000);
+    if (slow) showToast(S('toast.slowConnection'), 'warn', 5000);
   }
 }
 initNetworkMonitoring();
@@ -2796,7 +2796,7 @@ window.addEventListener('beforeinstallprompt', e => {
 window.addEventListener('appinstalled', () => {
   document.getElementById('install-banner').classList.remove('show');
   localStorage.setItem('civ_appInstalled', '1');
-  showToast('✅ האפליקציה הותקנה בהצלחה!', 'ok', 4000);
+  showToast(S('toast.installed'), 'ok', 4000);
 });
 
 function triggerInstall() {
@@ -2818,7 +2818,7 @@ function openQuitModal() {
   const answered = quizIdx;
   const total    = quizQuestions.length;
   document.getElementById('quit-progress-text').innerHTML =
-    `<strong>${answered}</strong> מתוך ${total} שאלות`;
+    `<strong>${answered}</strong> ${S('quiz.quitOf')} ${total} ${S('quiz.quitQuestions')}`;
   const bd = document.getElementById('quit-backdrop');
   bd.style.display = 'flex';
   requestAnimationFrame(() => bd.classList.add('active'));
@@ -3039,7 +3039,7 @@ function updatePlayerUI(track) {
   const artist = track.artist || '';
   const artContent = track.art ? `<img src="${track.art}">` : '🎵';
   $('sp-title').textContent   = title;
-  $('sp-artist').textContent  = artist || 'לחץ לפתיחת הנגן';
+  $('sp-artist').textContent  = artist || S('audio.openPlayer');
   $('sp-art').innerHTML       = artContent;
   $('fp-title').textContent   = title;
   $('fp-artist').textContent  = artist || '—';
@@ -3578,7 +3578,7 @@ function refreshDashboard() {
   const retrySub = document.getElementById('dash-retry-sub');
   if (retryBtn) {
     retryBtn.style.display = weak.length ? '' : 'none';
-    if (retrySub) retrySub.textContent = `${weak.length} מושגים לחזרה`;
+    if (retrySub) retrySub.textContent = `${weak.length} ${S('dashboard.weak.label')} ${S('dashboard.weak.sub')}`;
   }
 
   // Now playing
@@ -3649,7 +3649,7 @@ function buildFreeQuizQuestions() {
 
 function startWeakQuiz() {
   const weak = getAllWeakConcepts();
-  if (!weak.length) { showToast('אין מושגים לחזרה כרגע', 'info'); return; }
+  if (!weak.length) { showToast(S('toast.noWeakConcepts'), 'info'); return; }
   quizMode = 'review';
   setQuizMode('review');
 
